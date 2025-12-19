@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Merriweather', 'sans-serif';
+}
+
+/* 
+    
+    pink colors pallete
+    #B0413E -- red
+    #94A89A -- green-gray
+    #6F1D1B -- red
+    #C9B7AD -- grey-pink
+    #F4AFB4 -- pink
+    #EFB0A1 -- pink
+    #735D78 -- purple
+
+*/
+
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #C9B7AD;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+
+section {
+    position: relative;
+    max-width: 380px;
+    min-height: 520px;
+    background-color: #F4AFB4;
+    border: 2px solid white;
+    border-radius: 20px;
+
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.15),
+        inset 0 0 0 1px rgba(255,255,255,0.4);
+
+    backdrop-filter: blur(55px);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 3rem;
+    transition: all 0.5s ease-in-out;
+
+}
+
+form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+}
+
+h1{
+    font-size: 2rem;
+    color: whitesmoke;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.inputbox {
+    position: relative;
+    padding: 10px 0;
+    border-bottom: 2px solid rgba(255,255,255,0.7);
+}
+
+.inputbox input {
+    width: 100%;
+    height: 32px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #6F1D1B;
+    font-size: 1rem;
+}
+
+.inputbox label {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    color: whitesmoke;
+    transition: 0.3s ease;
+}
+
+.inputbox input:focus ~ label,
+.inputbox input:valid ~ label {
+    top: -6px;
+    font-size: 0.8rem;
+    color: #6F1D1B;
+}
+
+button{
+    width: 100;
+    margin-top: 1rem;
+    height: 40px;
+    border-radius: 30px;
+    background-color: #6F1D1B;
+    color: whitesmoke;
+
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+}
+
+
+button:hover{
+    background-color: #B0413E;
+    transform: translateY(-2px);
+    color: whitesmoke;
+}
+
+.register a {
+    color: #6F1D1B;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.register p a:hover{
+    text-decoration: underline;
+    color: #B0413E;
+}
+
+.inputbox ion-icon {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: whitesmoke;
+    font-size: 1.2rem;
+}

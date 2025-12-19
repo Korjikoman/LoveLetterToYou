@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Login</title>
+        <link rel="stylesheet" href="/css/style.css">
+        <script src="/js/signup.js" defer></script>
+        <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    </head>
+    <body>
+        <section>
+            <form method="post" action="/req/login">
+                <h1>Log In</h1>
+                <div class="inputbox">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="text" name="username" required>
+                    <label for="username">Username</label>
+                </div>
+                <div class="inputbox">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input type="password" name="password" required>
+                    <label for="password">Password</label>
+                </div>
+                <button>Sign Up</button>
+                <div class="register">
+                    <p>Don't have an account? <a th:href="@{/req/signup}">Sign Up</a></p>
+                </div>
+            </form>
+            
+        </section>
+    </body>
+</html>

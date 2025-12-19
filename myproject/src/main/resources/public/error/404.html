@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>404 - Page Not Found</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Цветовая палитра */
+        :root {
+            --red: #B0413E;
+            --dark-red: #6F1D1B;
+            --green-gray: #94A89A;
+            --grey-pink: #C9B7AD;
+            --light-pink: #F4AFB4;
+            --soft-pink: #EFB0A1;
+            --purple: #735D78;
+        }
+
+        body {
+            background-color: var(--grey-pink);
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .error-container {
+            background-color: var(--soft-pink);
+            border: 2px solid var(--purple);
+            border-radius: 20px;
+            width: 80%;
+            max-width: 600px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .error-container::before {
+            content: "💌";
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3rem;
+        }
+
+        h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 5rem;
+            color: var(--dark-red);
+            margin: 0;
+        }
+
+        p {
+            font-size: 1.2em;
+            color: var(--dark-red);
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 10px 25px;
+            background-color: var(--light-pink);
+            color: var(--dark-red);
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        a:hover {
+            background-color: var(--red);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .heart {
+            color: var(--red);
+            font-size: 1.5em;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1>404</h1>
+        <p>
+            Oh no! The page you are looking for seems to have wandered away.<br>
+            Don’t worry, you are still in my heart.<span class="heart">❤️</span>
+        </p>
+        <a href="/">Return Home</a>
+    </div>
+</body>
+</html>

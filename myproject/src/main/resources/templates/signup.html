@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Registration</title>
+        <link rel="stylesheet" href="/css/style.css">
+        <script src="/js/signup.js" defer></script>
+        <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    </head>
+    <body>
+        <section>
+            <form method="post" action="/req/login">
+                <h1>Log In</h1>
+                <div class="inputbox">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="text" id="username" name="username" required>
+                    <label for="username">username</label>
+                </div>
+                <div class="inputbox">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="text" id="email" name="email" required>
+                    <label for="email">email</label>
+                </div>
+                <div class="inputbox">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input type="password" id="password" name="password" required>
+                    <label for="password">Password</label>
+                </div>
+                <div class="inputbox">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input type="password" id="passwordcon" name="passwordcon" required>
+                    <label for="passwordcon">Repeat password</label>
+                </div>
+                <button id="submit" type="button">Sign Up</button>
+                <div class="register">
+                    <p>Already have an account? <a th:href="@{/req/login}">Log In</a></p>
+                </div>
+            </form>
+            
+        </section>
+    </body>
+</html>
+<script>
+    const submitButton = document.getElementById("submit");
+    submitButton.addEventListener('click', () =>{
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('passwordcon').value;
+        const email = document.getElementById('email').value;
+
+        const data = {
+            username,
+            password,
+            email
+        }
+
+        if (password == confirmPassword){
+            const jsonData = JSON.stringify(data)
+            fetch('/req/signup', {
+                method: 'POST',
+                headers:{
+                    'Content-Type': 'application/json'
+                },
+                body: jsonData
+            })
+            .then(response =>{
+                if (response.ok){
+                    window.location.href = '/req/login';
+                }else{
+                    alert('Registration Error. Check your data bruh...')
+                }
+            })
+            .catch(error => {
+                console.error('I got an error: ', error);
+                alert('Error while connecting to server');
+            })
+        }
+    })
+</script>
