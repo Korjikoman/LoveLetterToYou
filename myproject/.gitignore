@@ -30,8 +30,9 @@ build/
 !**/src/test/**/build/
 
 ### VS Code ###
-.vscode/
-
+.vscode/*
+/vscode/
+/vscode/settings.json
 
 # Sensitive data
 *.p12
@@ -39,5 +40,6 @@ build/
 *.jks
 *.pfx
 *.env
-
+.env
 /src/main/resources/application.yml
+application.yml
