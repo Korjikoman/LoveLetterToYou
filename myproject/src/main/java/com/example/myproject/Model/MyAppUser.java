@@ -15,6 +15,7 @@ public class MyAppUser {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String username;
+    @Column( name="email", nullable = false, unique = true)
     private String email;
     private String password;
     private String verificationToken;

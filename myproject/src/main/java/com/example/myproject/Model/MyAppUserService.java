@@ -1,5 +1,6 @@
 package com.example.myproject.Model;
 
+import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,22 @@ public class MyAppUserService implements UserDetailsService{
                     .build();    
         }else{
             throw new UsernameNotFoundException(username);
+        }
+    }
+
+    
+    public UserDetails loadUserByEmail(String email)throws UsernameNotFoundException {
+        
+
+        Optional<MyAppUser> user = repository.findByEmail(email);
+        if (user.isPresent()) {
+            var userObj = user.get();
+            return User.builder()
+                    .username(userObj.getUsername())
+                    .password(userObj.getPassword())
+                    .build();    
+        }else{
+            throw new UsernameNotFoundException(email);
         }
     }
     

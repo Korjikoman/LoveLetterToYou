@@ -1,101 +1,273 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Romantic Letter</title>
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <title>Romantic Letter Service</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+
     <style>
-        /* Цветовая палитра */
+        /* =====================
+           THEME VARIABLES
+        ====================== */
         :root {
-            --red: #B0413E;
-            --dark-red: #6F1D1B;
-            --green-gray: #94A89A;
-            --grey-pink: #C9B7AD;
-            --light-pink: #F4AFB4;
-            --soft-pink: #EFB0A1;
-            --purple: #735D78;
+            --red-main: #C14B4B;
+            --red-dark: #8B0000;
+            --pink-light: #FFE4E1;
+            --pink-soft: #FFDAB9;
+            --purple: #9370DB;
+            --shadow: rgba(0, 0, 0, 0.15);
+        }
+
+        /* =====================
+           RESET
+        ====================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background-color: var(--grey-pink);
-            font-family: 'Great Vibes', sans-serif;
-            margin: 0;
-            padding: 0;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+            flex-direction: column;
 
-        .letter-container {
-            background-color: var(--soft-pink);
-            border: 2px solid var(--purple);
-            border-radius: 15px;
-            width: 80%;
-            max-width: 600px;
-            padding: 40px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            font-family: 'Roboto', sans-serif;
+            color: var(--red-dark);
+            background: linear-gradient(to bottom, var(--pink-light), var(--pink-soft));
+            overflow-x: hidden;
             position: relative;
         }
 
-        .letter-container::before {
-            content: "";
+        /* =====================
+           FLOATING HEARTS
+        ====================== */
+        .background-hearts {
             position: absolute;
-            top: 0;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            background-color: var(--red);
-            border-radius: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        }
-
-        h1 {
-            font-family: 'Great Vibes', cursive;
-            font-size: 2.5em;
-            color: var(--dark-red);
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        p {
-            font-size: 1.1em;
-            line-height: 1.8;
-            color: var(--dark-red);
-        }
-
-        .signature {
-            margin-top: 40px;
-            text-align: right;
-            font-family: 'Great Vibes', cursive;
-            font-size: 1.5em;
-            color: var(--purple);
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .heart {
-            color: var(--red);
-            font-size: 1.2em;
-            margin-left: 5px;
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: var(--red-main);
+            transform: rotate(45deg);
+            opacity: 0.25;
+            animation: floatUp linear infinite;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: var(--red-main);
+            border-radius: 50%;
+        }
+
+        .heart::before {
+            top: -9px;
+            left: 0;
+        }
+
+        .heart::after {
+            left: -9px;
+            top: 0;
+        }
+
+        @keyframes floatUp {
+            from {
+                transform: translateY(110vh) rotate(45deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.25;
+            }
+            to {
+                transform: translateY(-120vh) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
+        /* =====================
+           HEADER
+        ====================== */
+        header {
+            position: relative;
+            z-index: 2;
+            background: var(--pink-soft);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px var(--shadow);
+        }
+
+        .logo {
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.6rem;
+            color: var(--red-main);
+        }
+
+        .status {
+            font-size: 0.95rem;
+            text-align: right;
+        }
+
+        /* =====================
+           NAVIGATION
+        ====================== */
+        nav {
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(to right, var(--purple), var(--red-main));
+            padding: 1rem 0;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #fff;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            transition: background 0.25s, transform 0.25s;
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* =====================
+           MAIN CONTENT
+        ====================== */
+        main {
+            flex: 1; 
+            position: relative;
+            z-index: 2;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 1rem;
+        }
+        .welcome-card {
+            background: #fff;
+            max-width: 750px;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 12px 30px var(--shadow);
+        }
+
+        .welcome-card h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 3rem;
+            color: var(--red-main);
+            margin-bottom: 1.5rem;
+        }
+
+        .welcome-card p {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* =====================
+           FOOTER
+        ====================== */
+        footer {
+            position: relative;
+            z-index: 2;
+
+            text-align: center;
+            padding: 1.5rem 0;
+            font-size: 0.9rem;
+
+            background: #f5f5f5;
+            border-top: 1px solid var(--pink-light);
+        }
+
+        /* =====================
+           RESPONSIVE
+        ====================== */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .welcome-card {
+                padding: 2rem;
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="letter-container">
-        <h1>My Dearest</h1>
-        <p>
-            From the moment our paths crossed, my heart knew it had found a home in you.  
-            Every thought of you warms my soul, like the gentle sun on a spring morning.  
-            The way you smile, the way you speak, every little gesture lingers in my heart forever.
-        </p>
-        <p>
-            I cherish every moment we share and dream of countless more adventures together.  
-            Know that you are loved, cherished, and treasured beyond words.
-        </p>
-        <div class="signature">
-            Yours forever,<br>
-            <span class="heart">❤️</span>  
-        </div>
+
+<!-- BACKGROUND HEARTS -->
+<div class="background-hearts">
+    <div class="heart" style="left:10%; animation-duration:14s;"></div>
+    <div class="heart" style="left:20%; animation-duration:18s;"></div>
+    <div class="heart" style="left:30%; animation-duration:16s;"></div>
+    <div class="heart" style="left:45%; animation-duration:20s;"></div>
+    <div class="heart" style="left:55%; animation-duration:15s;"></div>
+    <div class="heart" style="left:65%; animation-duration:19s;"></div>
+    <div class="heart" style="left:75%; animation-duration:17s;"></div>
+    <div class="heart" style="left:85%; animation-duration:21s;"></div>
+</div>
+
+<header>
+    <div class="logo">Romantic Letters</div>
+    <div class="status">
+        <div>Logged as: <strong th:text="${username}">username</strong></div>
+        <div>Online users: <strong th:text="${onlineCount}">0</strong></div>
     </div>
+</header>
+
+<nav>
+    <ul>
+        <li><a th:href="@{/letters}">My Letters</a></li>
+        <li><a th:href="@{/letters/new}">Create Letter</a></li>
+        <li><a th:href="@{/profile}">My Profile</a></li>
+    </ul>
+</nav>
+
+<main>
+    <div class="welcome-card">
+        <h1>Welcome</h1>
+        <p>
+            This place was created for words that are difficult to say out loud.<br>
+            Write a letter, share it with a single link,<br>
+            and let emotions speak for you.
+        </p>
+    </div>
+</main>
+
+<footer>
+    © Romantic Letter Service
+</footer>
+
 </body>
 </html>
