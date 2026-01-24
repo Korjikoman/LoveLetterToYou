@@ -1,273 +1,47 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Romantic Letter Service</title>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(
+          title='Romantic Homepage',
+          content=~{::content}
+      )}">
 
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<div th:fragment="content">
 
-    <style>
-        /* =====================
-           THEME VARIABLES
-        ====================== */
-        :root {
-            --red-main: #C14B4B;
-            --red-dark: #8B0000;
-            --pink-light: #FFE4E1;
-            --pink-soft: #FFDAB9;
-            --purple: #9370DB;
-            --shadow: rgba(0, 0, 0, 0.15);
-        }
+    <div class="welcome-card"
+         style="display:flex;justify-content:center;align-items:center;
+                min-height:calc(100vh - 300px);">
 
-        /* =====================
-           RESET
-        ====================== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        <div style="
+            background:#fff;
+            max-width:750px;
+            padding:3rem;
+            border-radius:20px;
+            text-align:center;
+            box-shadow:0 12px 30px rgba(0,0,0,.15);
+        ">
 
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            <h1 style="
+                font-family:'Great Vibes', cursive;
+                font-size:3rem;
+                color:#C14B4B;
+                margin-bottom:1.5rem;
+            ">
+                Welcome
+            </h1>
 
-            font-family: 'Roboto', sans-serif;
-            color: var(--red-dark);
-            background: linear-gradient(to bottom, var(--pink-light), var(--pink-soft));
-            overflow-x: hidden;
-            position: relative;
-        }
+            <p style="
+                font-family:'Playfair Display', serif;
+                font-size:1.2rem;
+                line-height:1.8;
+            ">
+                This place was created for words that aren't correct to say out loud.
+                Real love prefers silence.
+            </p>
 
-        /* =====================
-           FLOATING HEARTS
-        ====================== */
-        .background-hearts {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
+        </div>
+    </div>
 
-        .heart {
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background: var(--red-main);
-            transform: rotate(45deg);
-            opacity: 0.25;
-            animation: floatUp linear infinite;
-        }
-
-        .heart::before,
-        .heart::after {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background: var(--red-main);
-            border-radius: 50%;
-        }
-
-        .heart::before {
-            top: -9px;
-            left: 0;
-        }
-
-        .heart::after {
-            left: -9px;
-            top: 0;
-        }
-
-        @keyframes floatUp {
-            from {
-                transform: translateY(110vh) rotate(45deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.25;
-            }
-            to {
-                transform: translateY(-120vh) rotate(45deg);
-                opacity: 0;
-            }
-        }
-
-        /* =====================
-           HEADER
-        ====================== */
-        header {
-            position: relative;
-            z-index: 2;
-            background: var(--pink-soft);
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px var(--shadow);
-        }
-
-        .logo {
-            font-family: 'Great Vibes', cursive;
-            font-size: 2.6rem;
-            color: var(--red-main);
-        }
-
-        .status {
-            font-size: 0.95rem;
-            text-align: right;
-        }
-
-        /* =====================
-           NAVIGATION
-        ====================== */
-        nav {
-            position: relative;
-            z-index: 2;
-            background: linear-gradient(to right, var(--purple), var(--red-main));
-            padding: 1rem 0;
-        }
-
-        nav ul {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            gap: 2.5rem;
-        }
-
-        nav a {
-            text-decoration: none;
-            color: #fff;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            transition: background 0.25s, transform 0.25s;
-        }
-
-        nav a:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        /* =====================
-           MAIN CONTENT
-        ====================== */
-        main {
-            flex: 1; 
-            position: relative;
-            z-index: 2;
-
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 4rem 1rem;
-        }
-        .welcome-card {
-            background: #fff;
-            max-width: 750px;
-            padding: 3rem;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 12px 30px var(--shadow);
-        }
-
-        .welcome-card h1 {
-            font-family: 'Great Vibes', cursive;
-            font-size: 3rem;
-            color: var(--red-main);
-            margin-bottom: 1.5rem;
-        }
-
-        .welcome-card p {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            line-height: 1.8;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* =====================
-           FOOTER
-        ====================== */
-        footer {
-            position: relative;
-            z-index: 2;
-
-            text-align: center;
-            padding: 1.5rem 0;
-            font-size: 0.9rem;
-
-            background: #f5f5f5;
-            border-top: 1px solid var(--pink-light);
-        }
-
-        /* =====================
-           RESPONSIVE
-        ====================== */
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            nav ul {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .welcome-card {
-                padding: 2rem;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-<!-- BACKGROUND HEARTS -->
-<div class="background-hearts">
-    <div class="heart" style="left:10%; animation-duration:14s;"></div>
-    <div class="heart" style="left:20%; animation-duration:18s;"></div>
-    <div class="heart" style="left:30%; animation-duration:16s;"></div>
-    <div class="heart" style="left:45%; animation-duration:20s;"></div>
-    <div class="heart" style="left:55%; animation-duration:15s;"></div>
-    <div class="heart" style="left:65%; animation-duration:19s;"></div>
-    <div class="heart" style="left:75%; animation-duration:17s;"></div>
-    <div class="heart" style="left:85%; animation-duration:21s;"></div>
 </div>
 
-<header>
-    <div class="logo">Romantic Letters</div>
-    <div class="status">
-        <div>Logged as: <strong th:text="${username}">username</strong></div>
-        <div>Online users: <strong th:text="${onlineCount}">0</strong></div>
-    </div>
-</header>
-
-<nav>
-    <ul>
-        <li><a th:href="@{/letters}">My Letters</a></li>
-        <li><a th:href="@{/letters/new}">Create Letter</a></li>
-        <li><a th:href="@{/profile}">My Profile</a></li>
-    </ul>
-</nav>
-
-<main>
-    <div class="welcome-card">
-        <h1>Welcome</h1>
-        <p>
-            This place was created for words that are difficult to say out loud.<br>
-            Write a letter, share it with a single link,<br>
-            and let emotions speak for you.
-        </p>
-    </div>
-</main>
-
-<footer>
-    © Romantic Letter Service
-</footer>
-
-</body>
 </html>

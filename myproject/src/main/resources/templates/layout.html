@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(title, content)">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title th:text="${title}">Romantic Letter Service</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --red-main: #C14B4B;
+            --red-dark: #8B0000;
+            --pink-light: #FFE4E1;
+            --pink-soft: #FFDAB9;
+            --purple: #9370DB;
+            --shadow: rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Roboto', sans-serif;
+            color: var(--red-dark);
+            background: linear-gradient(to bottom, var(--pink-light), var(--pink-soft));
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .background-hearts {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .heart {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: var(--red-main);
+            transform: rotate(45deg);
+            opacity: 0.25;
+            animation: floatUp linear infinite;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: var(--red-main);
+            border-radius: 50%;
+        }
+
+        .heart::before {
+            top: -9px;
+            left: 0;
+        }
+
+        .heart::after {
+            left: -9px;
+            top: 0;
+        }
+
+        @keyframes floatUp {
+            from {
+                transform: translateY(110vh) rotate(45deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.25;
+            }
+            to {
+                transform: translateY(-120vh) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
+        header {
+            position: relative;
+            z-index: 2;
+            background: var(--pink-soft);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px var(--shadow);
+        }
+
+        .logo {
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.6rem;
+            color: var(--red-main);
+        }
+
+        .status {
+            font-size: 0.95rem;
+            text-align: right;
+        }
+
+        nav {
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(to right, var(--purple), var(--red-main));
+            padding: 1rem 0;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #fff;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            transition: background 0.25s, transform 0.25s;
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        main {
+            flex: 1;
+            position: relative;
+            z-index: 2;
+            padding: 3rem 1rem;
+        }
+
+        footer {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 1.5rem 0;
+            font-size: 0.9rem;
+            background: #f5f5f5;
+            border-top: 1px solid var(--pink-light);
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+    <th:block th:replace="${styles} ?: ~{}"></th:block>
+
+    
+</head>
+
+<body>
+
+<div class="background-hearts">
+    <div class="heart" style="left:10%; animation-duration:14s;"></div>
+    <div class="heart" style="left:20%; animation-duration:18s;"></div>
+    <div class="heart" style="left:30%; animation-duration:16s;"></div>
+    <div class="heart" style="left:45%; animation-duration:20s;"></div>
+    <div class="heart" style="left:55%; animation-duration:15s;"></div>
+    <div class="heart" style="left:65%; animation-duration:19s;"></div>
+    <div class="heart" style="left:75%; animation-duration:17s;"></div>
+    <div class="heart" style="left:85%; animation-duration:21s;"></div>
+</div>
+
+<header>
+    <div class="logo">Romantic Letters</div>
+    <div class="status">
+        <!-- <div>Logged as: <strong th:text="${#authentication.name}">username</strong></div> -->
+        <!-- <div>Online users: <strong th:text="${onlineCount} ?: '0'">0</strong></div> -->
+    </div>
+</header>
+
+<nav>
+    <ul>
+        <li><a th:href="@{/letters}">My Letters</a></li>
+        <li><a th:href="@{/create/letter}">Create Letter</a></li>
+        <li><a th:href="@{/profile}">My Profile</a></li>
+        <li><a th:href="@{/logout}">Logout</a></li>
+    </ul>
+</nav>
+
+
+<main>
+    <!-- СЮДА ПОДСТАВЛЯЕТСЯ КОНТЕНТ -->
+    <th:block  th:replace="${content}"> </th:block>
+</main>
+
+<footer>
+    © Romantic Letter Service
+</footer>
+
+</body>
+
+</html>

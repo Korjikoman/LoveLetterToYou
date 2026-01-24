@@ -2,13 +2,15 @@ package com.example.myproject.Controller;
 
 
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.myproject.Model.MyAppUser;
-import com.example.myproject.Model.MyAppUserRepository;
+import com.example.myproject.Repositories.MyAppUserRepository;
 import com.example.myproject.Services.EmailService;
 import com.example.myproject.Utils.JwtTokenUtil;
 
@@ -39,7 +41,8 @@ public class RegistrationController {
     @PostMapping(value="/signup", consumes = "application/json")
     public ResponseEntity<String> createUser(@RequestBody MyAppUser user) {
 
-        MyAppUser existingUser = myAppUserRepository.findByEmail(user.getEmail());
+        Optional<MyAppUser> existingUserOptional = myAppUserRepository.findByEmail(user.getEmail());
+        MyAppUser existingUser = existingUserOptional.get();
 
         if (existingUser != null){
             if (existingUser.getIsVerified()){

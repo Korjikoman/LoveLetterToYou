@@ -1,5 +1,6 @@
-package com.example.myproject.Model;
+package com.example.myproject.Services;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -8,6 +9,9 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import com.example.myproject.Model.Letter;
+import com.example.myproject.Repositories.LetterRepository;
 
 @Service
 
@@ -24,15 +28,8 @@ public class LetterService {
     public List<Letter> loadUserLetters(String email)throws UsernameNotFoundException {
         
 
-        Optional<List<Letter>> user = repository.findByAuthor(email);
-        if (user.isPresent()) {
-            var userObj = user.get();
-            return User.builder()
-                    .username(userObj.getUsername())
-                    .password(userObj.getPassword())
-                    .build();    
-        }else{
-            throw new UsernameNotFoundException(email);
-        }
+        Optional<List<Letter>> letters = repository.findByAuthor(email);
+        return letters.orElseThrow(() -> new UsernameNotFoundException(email));
+
     }
 }

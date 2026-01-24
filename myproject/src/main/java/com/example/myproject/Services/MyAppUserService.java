@@ -1,4 +1,4 @@
-package com.example.myproject.Model;
+package com.example.myproject.Services;
 
 import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.Optional;
@@ -10,6 +10,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.example.myproject.Model.MyAppUser;
+import com.example.myproject.Repositories.MyAppUserRepository;
+
 import lombok.AllArgsConstructor;
 
 @Service
@@ -19,31 +22,18 @@ public class MyAppUserService implements UserDetailsService{
     @Autowired
     private MyAppUserRepository repository;
     
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        
-
-        Optional<MyAppUser> user = repository.findByUsername(username);
-        if (user.isPresent()) {
-            var userObj = user.get();
-            return User.builder()
-                    .username(userObj.getUsername())
-                    .password(userObj.getPassword())
-                    .build();    
-        }else{
-            throw new UsernameNotFoundException(username);
-        }
-    }
 
     
-    public UserDetails loadUserByEmail(String email)throws UsernameNotFoundException {
+
+    @Override
+    public UserDetails loadUserByUsername(String email)throws UsernameNotFoundException {
         
 
         Optional<MyAppUser> user = repository.findByEmail(email);
         if (user.isPresent()) {
             var userObj = user.get();
             return User.builder()
-                    .username(userObj.getUsername())
+                    .username(userObj.getEmail())
                     .password(userObj.getPassword())
                     .build();    
         }else{

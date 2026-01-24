@@ -63,7 +63,7 @@ public class EmailService {
             helper.setFrom(from);
             helper.setText(content, true);
             mailSender.send(mimeMessage);
-            System.out.println("EMAIL SUCSESSFULLLLLLY SENT !!!!!!!!!!!!!!!!!!!!!!!!");
+            System.out.println("EMAIL SUCCESSFULLY SENT!");
         } catch (Exception e){
             System.err.println("Sending email gone wrong, here's why: --> "+  e.getMessage());
         }

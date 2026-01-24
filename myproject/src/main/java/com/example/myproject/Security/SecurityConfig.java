@@ -13,7 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.example.myproject.Model.MyAppUserService;
+import com.example.myproject.Services.MyAppUserService;
 
 import lombok.AllArgsConstructor;
 
@@ -49,6 +49,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .formLogin(httpForm ->{
                 httpForm.loginPage("/req/login").permitAll();
+                httpForm.usernameParameter("email");
+                httpForm.passwordParameter("password");
                 httpForm.defaultSuccessUrl("/index");
                 
             })
@@ -56,6 +58,9 @@ public class SecurityConfig {
             
             .authorizeHttpRequests(registry ->{
                 registry.requestMatchers("/req/**","/css/**","/js/**").permitAll();
+                
+                registry.requestMatchers("/create/**", "/letters/**", "/profile/**").authenticated();
+                
                 registry.anyRequest().authenticated();
             })
             .build();

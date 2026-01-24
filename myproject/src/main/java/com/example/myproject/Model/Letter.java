@@ -20,11 +20,8 @@ public class Letter {
 
     @ManyToOne
     @JoinColumn(name = "author_id", referencedColumnName = "id", nullable = false)
-    private Long authorId; 
+    private MyAppUser author; 
 
-    @ManyToOne
-    @JoinColumn(name="author", referencedColumnName = "email")
-    private String author;
     private String title;
     private String text;
     private String url;
@@ -34,14 +31,21 @@ public class Letter {
     }
 
     public Long getAuthorID(){
-        return this.authorId;
+        return this.author.getId();
+    }
+    public String getAuthorEmail(){
+        return this.author.getEmail();
     }
 
-    public void setTitile(String newTitle){
+    public void setAuthor(MyAppUser author){
+        this.author = author;
+    }
+
+    public void setTitle(String newTitle){
         this.title = newTitle;
     }
 
-    public String getTitile(){
+    public String getTitle(){
         return this.title;
     }
 
