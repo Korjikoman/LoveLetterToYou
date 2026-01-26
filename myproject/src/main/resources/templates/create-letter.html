@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout :: layout (
+        title='Create Letter',
+        content = ~{::content}
+    )}">
+<head>
+    <div th:fragment="extra-styles">
+        <style>
+            .letter-card {
+                background: #fff;
+                max-width: 700px;
+                width: 100%;
+                margin: 0 auto;
+                padding: 3rem;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                border: 2px solid #FFE4E1;
+            }
+
+            .letter-card h1 {
+                font-family: 'Great Vibes', cursive;
+                font-size: 2.8rem;
+                color: #C14B4B;
+                margin-bottom: 0.5rem;
+                text-align: center;
+            }
+
+            .form-group textarea {
+                width: 100%;
+                min-height: 300px;
+                padding: 1.2rem;
+                border: 2px solid #FFE4E1;
+                border-radius: 10px;
+                font-family: 'Roboto', sans-serif;
+                font-size: 0.95rem;
+                line-height: 1.6;
+                resize: vertical;
+                color: #8B0000;
+            }
+
+            .form-group textarea:focus {
+                outline: none;
+                border-color: #C14B4B;
+                box-shadow: 0 0 10px rgba(193, 75, 75, 0.2);
+            }
+
+            .btn-create {
+                background: linear-gradient(to right, #9370DB, #C14B4B);
+                color: #fff;
+                border: none;
+                padding: 1rem 3rem;
+                font-size: 1rem;
+                font-family: 'Playfair Display', serif;
+                border-radius: 25px;
+                cursor: pointer;
+                transition: transform 0.2s, box-shadow 0.2s;
+                font-weight: 500;
+                width: 100%;
+            }
+
+            .btn-create:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(193, 75, 75, 0.3);
+            }
+        </style>
+    </div>
+
+</head>
+
+<body>
+
+
+<main>
+    <div th:fragment="content">
+        <div class="letter-card">
+            <h1>💌 Write Your Letter</h1>
+            <p class="subtitle">Express your feelings with words...</p>
+            
+            <form th:action="@{/create/letter}" method="POST">
+                <div class="form-group">
+                    <label for="letterContent">Your Love Letter</label>
+                    <textarea 
+                        id="letterContent" 
+                        name="content" 
+                        placeholder="Pour your heart out..."
+                        required></textarea>
+                </div>
+            </form>
+        </div>
+
+    </div>
+    
+</main>
+
+</body>
+<script id="extra-scripts">
+    createLetterButton = document.getElementById("createButton");
+    createLetterButton.addEventListener('click', () => {
+        const letter_text = document.getElementById('letterContent').value;
+    
+        const data = {text: letter_text}
+        const jsonData = JSON.stringify(data)
+        fetch('/create/letter', {
+            method: 'POST',
+            headers:{
+                'Content-Type': 'application/json'
+            },
+            body: jsonData
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = '/index';
+            }else {
+                alert('Error bruh...💀💀💀🥀🥀🥀');
+            }
+        }).catch(error => {
+            console.error('Error bruh...💀💀💀🥀🥀🥀: ', error);
+            alert('Network Error bruh...')
+        })
+    })
+</script>
+</html>

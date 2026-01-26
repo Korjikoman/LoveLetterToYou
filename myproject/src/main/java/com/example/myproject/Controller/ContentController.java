@@ -2,6 +2,8 @@ package com.example.myproject.Controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -18,12 +20,17 @@ public class ContentController {
     public String signup() {
         return "signup";
     }
-
+    
 
     
     @GetMapping("/index")
     public String home() {
         return "index";
+    }
+
+    @GetMapping("/create/letter")
+    public String getMethodName() {
+        return "create-letter";
     }
     
 }
