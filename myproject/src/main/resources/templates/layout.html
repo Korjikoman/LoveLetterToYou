@@ -10,6 +10,7 @@
     <title th:text="${title}">Romantic Letter Service</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
     <style>
         :root {
@@ -104,6 +105,7 @@
             font-family: 'Great Vibes', cursive;
             font-size: 2.6rem;
             color: var(--red-main);
+            text-decoration: none;
         }
 
         .status {
@@ -188,7 +190,7 @@
 </div>
 
 <header>
-    <div class="logo">Romantic Letters</div>
+    <a th:href="@{/index}" class="logo">Romantic Letters</a>
     <div class="status">
         <!-- <div>Logged as: <strong th:text="${#authentication.name}">username</strong></div> -->
         <!-- <div>Online users: <strong th:text="${onlineCount} ?: '0'">0</strong></div> -->
@@ -207,13 +209,13 @@
 
 <main>
     <!-- СЮДА ПОДСТАВЛЯЕТСЯ КОНТЕНТ -->
-    <th:block  th:replace="${content}"> </th:block>
+    <th:block  th:replace="${content} ?: ~{}"></th:block>
 </main>
 
 <footer>
     © Romantic Letter Service
 </footer>
-
+    
 </body>
-
+<th:block th:replace="${scripts}"> </th:block>
 </html>

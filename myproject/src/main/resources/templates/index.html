@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en"
-      xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout(
-          title='Romantic Homepage',
-          content=~{::content}
-      )}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout :: layout (
+        title='Create Letter',
+        content = ~{::content},
+        styles = ~{},
+        scripts = ~{}
+    )}">
 
 <div th:fragment="content">
 

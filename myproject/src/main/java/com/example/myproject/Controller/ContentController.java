@@ -21,7 +21,10 @@ public class ContentController {
         return "signup";
     }
     
-
+    @GetMapping("/create/letter/geturl")
+    public String getURL() {
+        return "geturl";
+    }
     
     @GetMapping("/index")
     public String home() {
@@ -29,7 +32,7 @@ public class ContentController {
     }
 
     @GetMapping("/create/letter")
-    public String getMethodName() {
+    public String createLetter() {
         return "create-letter";
     }
     

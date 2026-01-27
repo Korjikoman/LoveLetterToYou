@@ -39,7 +39,7 @@ public class JwtTokenUtil {
         return jwtParser.parseClaimsJws(token).getBody().getExpiration();
     }
 
-    public String extractEmail(String token ){
+    public String extractEmail(String token){
         JwtParser jwtParser = Jwts.parserBuilder()
         .setSigningKey(SECRET_KEY)
         .build();

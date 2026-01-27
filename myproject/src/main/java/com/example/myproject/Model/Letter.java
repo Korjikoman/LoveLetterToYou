@@ -1,11 +1,15 @@
 package com.example.myproject.Model;
 
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,7 +19,7 @@ import lombok.Setter;
 public class Letter {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @ManyToOne
@@ -24,7 +28,20 @@ public class Letter {
 
     private String title;
     private String text;
-    private String url;
+    
+    @Column(name="public_token", nullable=false, unique=true)
+    private String publicToken;
+
+    @Column(nullable = false, name = "created_at")
+    private LocalDateTime createdAt;
+
+    public void setCreatedAt(LocalDateTime time){
+        createdAt = time;
+    }
+
+    public LocalDateTime getCreatedAt(){
+        return createdAt;
+    }
 
     public Long getLetterID(){
         return this.id;
@@ -57,11 +74,11 @@ public class Letter {
         return this.text;
     }
 
-    public void setURL(String url){
-        this.url = url;
+    public void setPublicToken(String publicToken){
+        this.publicToken = publicToken;
     }
 
-    public String getURL(){
-        return this.url;
+    public String getPublicTokenL(){
+        return this.publicToken;
     }
 }
