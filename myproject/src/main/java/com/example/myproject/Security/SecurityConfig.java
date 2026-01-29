@@ -8,6 +8,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.socket.EnableWebSocketSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -55,11 +56,13 @@ public class SecurityConfig {
                 
             })
     
-            
+            .sessionManagement(session -> {
+                session.maximumSessions(1);
+            })
             .authorizeHttpRequests(registry ->{
                 registry.requestMatchers("/req/**","/css/**","/js/**").permitAll();
                 
-                registry.requestMatchers("/create/**", "/letters/**", "/profile/**").authenticated();
+                registry.requestMatchers("/create/**", "/letters/**", "/profile/**", "/index").authenticated();
                 
                 registry.anyRequest().authenticated();
             })

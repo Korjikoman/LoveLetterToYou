@@ -192,8 +192,9 @@
 <header>
     <a th:href="@{/index}" class="logo">Romantic Letters</a>
     <div class="status">
-        <!-- <div>Logged as: <strong th:text="${#authentication.name}">username</strong></div> -->
-        <!-- <div>Online users: <strong th:text="${onlineCount} ?: '0'">0</strong></div> -->
+        <!-- <div>Logged as: <strong th:text="${user.email}"></strong></div> -->
+        <div>Online users: <strong id="usersOnlineCounter"></strong></div>
+        <div>Writed love letters: <strong th:text="${lettersCount} ?: '0'"></strong></div>
     </div>
 </header>
 

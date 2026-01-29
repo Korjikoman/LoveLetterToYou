@@ -38,7 +38,7 @@ public class RedisConfiguration{
 
     @Bean
     public ChannelTopic topic(){
-        return new ChannelTopic("channelName");
+        return new ChannelTopic("channel_0");
     }
 
     @Bean
