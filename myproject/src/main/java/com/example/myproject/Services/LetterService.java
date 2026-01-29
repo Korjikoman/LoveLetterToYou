@@ -14,7 +14,6 @@ import com.example.myproject.Model.Letter;
 import com.example.myproject.Repositories.LetterRepository;
 
 @Service
-
 public class LetterService {
     @Autowired
     private LetterRepository repository;
@@ -31,5 +30,9 @@ public class LetterService {
         Optional<List<Letter>> letters = repository.findByAuthor(email);
         return letters.orElseThrow(() -> new UsernameNotFoundException(email));
 
+    }
+
+    public Letter checkUniquePublicToken(String token){
+        return repository.findByPublicToken(token);
     }
 }

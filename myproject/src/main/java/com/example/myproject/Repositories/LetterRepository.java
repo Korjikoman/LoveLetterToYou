@@ -13,4 +13,6 @@ public interface LetterRepository extends JpaRepository <Letter, Long>{
     Optional<Letter> findById(Long id);
     
     Optional<List<Letter>> findByAuthor(String author_email);
+
+    Letter findByPublicToken(String publicToken);
 }

@@ -1,0 +1,28 @@
+<link rel="stylesheet" href="/css/modal_url.css">
+
+<div class="modal-overlay">
+    <div class="modal-card ">
+        <h2>💖 Letter Saved</h2>
+        <p>
+            Your beautiful message is now safely stored in your letters.<br>
+            To give this letter to someone special, copy the link below.
+        </p>
+
+        <div class="url-box">
+            <input id="letterUrl" type="text" readonly>
+            <button type="button" class="btn-copy"
+            onclick="const i=document.getElementById('letterUrl');
+                 i.select();
+                 navigator.clipboard.writeText(i.value);">
+    Copy
+</button>
+
+        </div>
+
+        <div class="actions">
+            <a href="/my/letters" class="action-btn btn-secondary">My Letters</a>
+            <a href="/create/letter" class="action-btn btn-primary">Create New Letter</a>
+        </div>
+    </div>
+</div>
+
