@@ -78,7 +78,7 @@ public class Letter {
         this.publicToken = publicToken;
     }
 
-    public String getPublicTokenL(){
+    public String getPublicToken(){
         return this.publicToken;
     }
 }

@@ -15,8 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.myproject.Model.Letter;
 import com.example.myproject.Model.MyAppUser;
-import com.example.myproject.Repositories.LetterRepository;
+
 import com.example.myproject.Repositories.MyAppUserRepository;
+import com.example.myproject.Repositories.RedisRepository;
 import com.example.myproject.Services.LetterService;
 import com.example.myproject.Utils.PublicToken;
 
@@ -24,22 +25,21 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
 
 
 @RestController
 @RequestMapping("/create")
 public class LetterController {
-    @Autowired
-    private LetterRepository letterRepository;
+
 
     @Autowired
     private LetterService letterService;
 
     @Autowired
     private MyAppUserRepository userRepository;
+
+    @Autowired
+    private RedisRepository redisRepository;
 
     @PostMapping(value="/letter", consumes="application/json")
     @ResponseBody
@@ -86,13 +86,12 @@ public class LetterController {
 
         letter.setPublicToken(publicToken);
 
-        // Сохраняем письмо в бд
-        letterRepository.save(letter);
-
+        // Сохраняем письмо в Redis
+        redisRepository.add(letter);
 
         String url = getURL(request);
 
-        fullURL = url + "//" + publicToken; 
+        fullURL = url + "/watch/letter"+ "/" + publicToken; 
 
         return ResponseEntity.ok(fullURL);
     }

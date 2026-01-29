@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Romantic Letter</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/watch_letter.css">
+    
+</head>
+
+<body>
+
+<a th:href="@{/index}" class="logo">💌</a>
+
+<div class="background-hearts">
+    <div class="heart" style="left:10%; animation-duration:14s;"></div>
+    <div class="heart" style="left:25%; animation-duration:18s;"></div>
+    <div class="heart" style="left:40%; animation-duration:16s;"></div>
+    <div class="heart" style="left:55%; animation-duration:20s;"></div>
+    <div class="heart" style="left:70%; animation-duration:15s;"></div>
+    <div class="heart" style="left:85%; animation-duration:19s;"></div>
+</div>
+
+<div class="letter-container">
+    <div class="letter-card">
+        <h2 th:text="${letterTitle}"></h2>
+        <p th:text="${letterText}">
+        </p>
+        <div class="author" th:text="'— ' + ${authorEmail}"></div>
+    </div>
+</div>
+
+</body>
+</html>
