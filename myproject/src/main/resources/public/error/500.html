@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>404 - Page Not Found</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #C14B4B;
+            --deep-red: #8B0000;
+            --soft-pink: #FFDAB9;
+            --light-pink: #FFE4E1;
+            --blush-pink: #FFC0CB;
+            --warm-purple: #9370DB;
+            --neutral-gray: #F5F5F5;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(to bottom, var(--light-pink), var(--soft-pink));
+            font-family: 'Roboto', sans-serif;
+            color: var(--deep-red);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Floating hearts container */
+        .hearts-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 20px;
+            color: var(--primary-red);
+            opacity: 0.4;
+            animation: float-heart 15s linear infinite;
+            will-change: transform, opacity;
+        }
+
+        .heart:nth-child(odd) {
+            font-size: 25px;
+            opacity: 0.3;
+            animation-duration: 20s;
+            animation-delay: calc(var(--i) * 1s);
+        }
+
+        .heart:nth-child(even) {
+            font-size: 15px;
+            opacity: 0.5;
+            animation-duration: 18s;
+            animation-delay: calc(var(--i) * 0.5s);
+        }
+
+        @keyframes float-heart {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.4;
+            }
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Generate multiple hearts with different positions and delays */
+        .heart:nth-child(1) { left: 5%; --i: 1; }
+        .heart:nth-child(2) { left: 15%; --i: 2; }
+        .heart:nth-child(3) { left: 25%; --i: 3; }
+        .heart:nth-child(4) { left: 35%; --i: 4; }
+        .heart:nth-child(5) { left: 45%; --i: 5; }
+        .heart:nth-child(6) { left: 55%; --i: 6; }
+        .heart:nth-child(7) { left: 65%; --i: 7; }
+        .heart:nth-child(8) { left: 75%; --i: 8; }
+        .heart:nth-child(9) { left: 85%; --i: 9; }
+        .heart:nth-child(10) { left: 95%; --i: 10; }
+        .heart:nth-child(11) { left: 10%; --i: 11; animation-duration: 22s; }
+        .heart:nth-child(12) { left: 20%; --i: 12; animation-duration: 17s; }
+        .heart:nth-child(13) { left: 30%; --i: 13; animation-duration: 19s; }
+        .heart:nth-child(14) { left: 40%; --i: 14; animation-duration: 16s; }
+        .heart:nth-child(15) { left: 50%; --i: 15; animation-duration: 21s; }
+
+        .error-container {
+            background: #fff;
+            border: 1px solid var(--light-pink);
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            padding: 3rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            position: relative;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+            z-index: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .error-container::before {
+            content: '💌';
+            position: absolute;
+            top: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            color: var(--primary-red);
+            opacity: 0.3;
+            animation: beat 2s infinite ease-in-out;
+        }
+
+        @keyframes beat {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.2); }
+        }
+
+        h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 6rem;
+            color: var(--primary-red);
+            margin: 0 0 1rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+            animation: heartbeat 2s infinite ease-in-out;
+        }
+
+        @keyframes heartbeat {
+            0%, 20%, 40%, 100% { transform: scale(1); }
+            10%, 30% { transform: scale(1.05); }
+        }
+
+        p {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: var(--deep-red);
+            margin: 0 0 2rem;
+            animation: fadeText 2s ease-in-out;
+        }
+
+        @keyframes fadeText {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .heart-icon {
+            color: var(--primary-red);
+            font-size: 1.5em;
+            margin-left: 0.5rem;
+            animation: beat 1s infinite ease-in-out;
+        }
+
+        a {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            background: linear-gradient(to right, var(--warm-purple), var(--primary-red));
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 400;
+            border-radius: 30px;
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            animation: fadeText 2.5s ease-in-out;
+        }
+
+        a:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(193, 75, 75, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 4rem;
+            }
+
+            p {
+                font-size: 1.1rem;
+            }
+
+            .error-container {
+                padding: 2rem;
+                width: 95%;
+            }
+
+            .heart {
+                font-size: 15px;
+            }
+
+            .heart:nth-child(odd) {
+                font-size: 20px;
+            }
+
+            .heart:nth-child(even) {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hearts-container">
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+        <div class="heart">❤️</div>
+    </div>
+    <div class="error-container">
+        <h1>500</h1>
+        <p>
+            Oh no! The page you are looking for seems to have wandered away.<br>
+            Don’t worry, you are still in my heart.<span class="heart-icon">❤️</span>
+        </p>
+        <a href="/">Return Home</a>
+    </div>
+</body>
+</html>

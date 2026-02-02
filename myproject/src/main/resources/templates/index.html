@@ -46,23 +46,7 @@
 </div>
 
 <div th:fragment="scripts">
-    <script>
-        
 
-        ws = new WebSocket("ws://"+ location.host+"/ws");
-        ws.onopen = () => {
-            console.log("WebSocket Connected Successfully");
-        }
-        ws.onmessage = (event) => {
-            console.log("Message from server: ", event.data);
-            document.getElementById("usersOnlineCounter").innerText = event.data;
-        }
-
-        ws.onclose = () => {
-            console.log("WebSocket Disconnected")
-        }
-    </script>
-    
 </div>
 
 </html>

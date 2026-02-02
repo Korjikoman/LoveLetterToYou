@@ -2,7 +2,9 @@ package com.example.myproject.WebSocket;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,15 +15,23 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.example.myproject.Repositories.RedisRepository;
 
+import jakarta.annotation.PreDestroy;
+import tools.jackson.databind.ObjectMapper;
+
 @Component
 public class SocketConnectionHandler extends TextWebSocketHandler {
     List<WebSocketSession> webSocketSessions = Collections.synchronizedList(new ArrayList<>());
     
-    
+    private boolean shutdown = false;
     private RedisRepository redisRepository;
     
     public SocketConnectionHandler(RedisRepository redisRepository){
         this.redisRepository = redisRepository;
+    }
+
+    @PreDestroy
+    public void isShuttingDown(){
+        shutdown = true;
     }
 
 
@@ -48,11 +58,15 @@ public class SocketConnectionHandler extends TextWebSocketHandler {
     @Override 
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         super.afterConnectionClosed(session, status);
-        redisRepository.setUserOnline(getEmail(session), false);
-        System.out.println(session.getId() + " disconnected.");
 
+        if (shutdown) return;
+
+        redisRepository.setUserOnline(getEmail(session), false);
+        redisRepository.setUserWritingLetter(getEmail(session), false);
+        System.out.println(session.getId() + " disconnected.");
         webSocketSessions.remove(session);
         sendMessage();
+
     }
 
     private String getEmail(WebSocketSession session){
@@ -70,12 +84,27 @@ public class SocketConnectionHandler extends TextWebSocketHandler {
 
     private void sendMessage(){
         long couter = redisRepository.countOnlineUsers();
-        TextMessage message = new TextMessage(String.valueOf(couter));
+        long couterW = redisRepository.countWritingLetterUsers();
+
+        System.out.printf("Users online: %d \nUsers that are writing letter rn: %d\n", couter, couterW);
+
+        Map<String, Long> msg = new HashMap<>();
+        msg.put("usersOnline", couter);
+        msg.put("usersWritingLetter", couterW);
+
+
+        // преобразование в json
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json_message = objectMapper.writeValueAsString(msg);
+                
+
+        TextMessage message = new TextMessage(json_message);
         synchronized (webSocketSessions){
             for (WebSocketSession s: webSocketSessions){
                 try{
                     s.sendMessage(message);
                 }catch (Exception e){
+                    System.err.println("NIGGAAAAA " + s);
                     System.err.println("Ошибка: " + e);
                 }
             }

@@ -29,6 +29,27 @@ public class Letter {
     private String title;
     private String text;
     
+    private String password;
+    private Integer ttl;
+
+    public void setPassword(String newPassword){
+        this.password = newPassword;
+    }
+
+    public String getPassword(){
+        return this.password;
+    }
+
+
+    public void setTTL(Integer ttl){
+        this.ttl = ttl;
+    }
+
+    public Integer getTTL(){
+        return this.ttl;
+    }
+
+
     @Column(name="public_token", nullable=false, unique=true)
     private String publicToken;
 

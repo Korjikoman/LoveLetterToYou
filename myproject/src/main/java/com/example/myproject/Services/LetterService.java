@@ -18,19 +18,8 @@ public class LetterService {
     @Autowired
     private LetterRepository repository;
     
-    public Letter loadLetterById(Long id){
-        
-        return repository.findById(id).orElseThrow(() -> new NoSuchElementException("Letter with id " + id + " not found"));
-    }
 
-    
-    public List<Letter> loadUserLetters(String email)throws UsernameNotFoundException {
-        
 
-        Optional<List<Letter>> letters = repository.findByAuthor(email);
-        return letters.orElseThrow(() -> new UsernameNotFoundException(email));
-
-    }
 
     public Letter checkUniquePublicToken(String token){
         return repository.findByPublicToken(token);

@@ -55,17 +55,18 @@ public class SecurityConfig {
                 httpForm.defaultSuccessUrl("/index");
                 
             })
-    
+            
             .sessionManagement(session -> {
                 session.maximumSessions(1);
             })
             .authorizeHttpRequests(registry ->{
-                registry.requestMatchers("/req/**","/css/**","/js/**").permitAll();
+                registry.requestMatchers("/req/**","/css/**","/js/**", "/watch/letter/**", "/api/**").permitAll();
                 
                 registry.requestMatchers("/create/**", "/letters/**", "/profile/**", "/index").authenticated();
                 
                 registry.anyRequest().authenticated();
             })
+            .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/req/login").invalidateHttpSession(true).deleteCookies("JSESSIONID"))
             .build();
     }
     

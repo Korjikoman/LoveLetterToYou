@@ -8,7 +8,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.myproject.Model.Letter;
 import com.example.myproject.Model.MyAppUser;
@@ -49,30 +51,52 @@ public class ContentController {
     
     @GetMapping("/index")
     public String home(Model model, Authentication authentication) {
-        String email = authentication.getName();
-        
-        MyAppUser user = myAppUserRepository.findByEmail(email).get();
-        
-
-        //model.addAttribute("user", user);
-        //model.addAttribute("onlineCount", usersOnlineCounter);
         return "index";
     }
 
+
+
+    // Обновляем TTL user is online
+    @PostMapping(value="/api/user/user-is-online")
+    @ResponseBody
+    public void check(Authentication auth){
+        if (auth == null){
+            return;
+        }
+        redisRepository.updateUserOnline(auth.getName());
+    }
+
+    @GetMapping("/api/user/user-is-online")
+    public String redirectToIndex() {
+        
+        System.out.println("NIGGA");
+        return "redirect:/index";
+    }
+    
+    // Обновляем TTL user is writing letter
+    @PostMapping(value="/api/letter/heartbeat-writing-letter")
+    @ResponseBody
+    public void leave(Authentication auth){
+        if (auth == null){
+            return;
+        }
+        // Пользователь не пишет письмо
+        redisRepository.updateUserWritingLetter(auth.getName());
+    }
+
+
+    @GetMapping("/api/letter/heartbeat-writing-letter")
+    public String redirectToCreateLetter() {
+        return "redirect:/create-letter";
+    }
+
     @GetMapping("/create/letter")
-    public String createLetter() {
+    public String createLetter(Authentication authentication) {
+        redisRepository.setUserWritingLetter(authentication.getName(), true);
+        
         return "create-letter";
     }
     
-    @GetMapping("/watch/letter/{publicToken}")
-    public String watchLetter(@PathVariable String publicToken, Model model) {
-        Letter letter = new Letter();
-        letter = redisRepository.findLetter(publicToken);
-        model.addAttribute("letterTitle", letter.getTitle());
-        model.addAttribute("letterText", letter.getText());
-        model.addAttribute("authorEmail", letter.getAuthorEmail());
-
-        return "open-letter-and-watch-content";
-    }
+    
     
 }

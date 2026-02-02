@@ -194,14 +194,14 @@
     <div class="status">
         <!-- <div>Logged as: <strong th:text="${user.email}"></strong></div> -->
         <div>Online users: <strong id="usersOnlineCounter"></strong></div>
-        <div>Writed love letters: <strong th:text="${lettersCount} ?: '0'"></strong></div>
+        <div>Writed love letters: <strong id="usersWritingLetterCounter"></strong></div>
     </div>
 </header>
 
 <nav>
     <ul>
         <li><a th:href="@{/letters}">My Letters</a></li>
-        <li><a th:href="@{/create/letter}">Create Letter</a></li>
+        <li><a id="createLetter" th:href="@{/create/letter}">Create Letter</a></li>
         <li><a th:href="@{/profile}">My Profile</a></li>
         <li><a th:href="@{/logout}">Logout</a></li>
     </ul>
@@ -219,4 +219,24 @@
     
 </body>
 <th:block th:replace="${scripts}"> </th:block>
+<script>
+    ws = new WebSocket("ws://"+ location.host+"/ws");
+        ws.onopen = () => {
+            console.log("WebSocket Connected Successfully");
+        }
+        ws.onmessage = (event) => {
+            console.log("Message from server: ", event.data);
+            var obj = JSON.parse(event.data);
+
+            document.getElementById("usersOnlineCounter").innerText = obj.usersOnline;
+            document.getElementById("usersWritingLetterCounter").innerText = obj.usersWritingLetter;
+        }
+
+        ws.onclose = () => {
+            console.log("WebSocket Disconnected")
+        }
+    setInterval(() => {
+        fetch("/api/user/user-is-online", {method: "POST"}, 59000); 
+    })
+</script>
 </html>
