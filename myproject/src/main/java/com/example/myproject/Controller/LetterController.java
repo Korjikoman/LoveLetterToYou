@@ -92,7 +92,7 @@ public class LetterController {
 
         // ДОБАВИТЬ TITLE в html
         letter.setTitle(letterTitle);
-        letter.setAuthor(user);
+        letter.setAuthorEmail(user.getEmail());
 
         // генерируем уникальный токен
         String publicToken = PublicToken.generatePublicToken();

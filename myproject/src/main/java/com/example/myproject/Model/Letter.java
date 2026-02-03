@@ -22,9 +22,7 @@ public class Letter {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "author_id", referencedColumnName = "id", nullable = false)
-    private MyAppUser author; 
+    private String authorEmail; 
 
     private String title;
     private String text;
@@ -70,15 +68,13 @@ public class Letter {
         return this.id;
     }
 
-    public Long getAuthorID(){
-        return this.author.getId();
-    }
-    public String getAuthorEmail(){
-        return this.author.getEmail();
+
+    public void setAuthorEmail(String email){
+        this.authorEmail = email;
     }
 
-    public void setAuthor(MyAppUser author){
-        this.author = author;
+    public String getAuthorEmail(){
+        return this.authorEmail;
     }
 
     public void setTitle(String newTitle){

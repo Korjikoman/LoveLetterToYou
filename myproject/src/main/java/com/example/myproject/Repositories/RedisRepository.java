@@ -1,5 +1,6 @@
 package com.example.myproject.Repositories;
 
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONMLParserConfiguration;
@@ -21,6 +22,6 @@ public interface RedisRepository {
     long countWritingLetterUsers();
     void updateUserWritingLetter(String email);
     void updateUserOnline(String email);
-    String getAllLetters();
+    List<Letter> getAllLetters(String email);
 
 }

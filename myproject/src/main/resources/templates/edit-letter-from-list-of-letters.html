@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout (
+          title='Edit Letter',
+          content = ~{::content},
+          styles = ~{::styles},
+          scripts = ~{::scripts}
+      )}">
+
+<head>
+    <div th:fragment="styles">
+        <link rel="stylesheet" href="/css/create_letter.css">
+    </div>
+</head>
+
+<body>
+<main>
+    <div th:fragment="content">
+        <div class="letter-card">
+            <h1>✏️ Edit Your Letter</h1>
+
+            <input type="hidden" id="publicToken" th:value="${letterPublicToken}"/>
+
+            <div class="form-group">
+                <input type="text"
+                       id="letterTitle"
+                       class="letter-title"
+                       th:value="${letterTitle}"
+                       maxlength="120"
+                       required/>
+            </div>
+
+            <div class="form-group">
+                <textarea id="letterContent"
+                          required
+                          th:text="${letterText}"></textarea>
+            </div>
+
+            <div class="form-group slider-group">
+                <label>
+                    Letter's living time:
+                    <span id="livingTimeValue"
+                          th:text="${letterTTL}">60</span> min
+                </label>
+                <input type="range"
+                       id="livingTime"
+                       min="1"
+                       max="1440"
+                       th:value="${letterTTL}">
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox"
+                           id="protectedLetter"
+                           th:checked="${letterPassword != null}">
+                    Protected Letter
+                </label>
+            </div>
+
+            <div class="form-group password-block"
+                 id="passwordContainer"
+                 th:style="${letterPassword != null} ? 'display:flex' : 'display:none'">
+
+                <label>New password (5 chars)</label>
+                <div id="passwordInputs">
+                    <input class="password-char" maxlength="1">
+                    <input class="password-char" maxlength="1">
+                    <input class="password-char" maxlength="1">
+                    <input class="password-char" maxlength="1">
+                    <input class="password-char" maxlength="1">
+                </div>
+            </div>
+
+            <div class="btn-container">
+                <button type="button" id="saveButton" class="btn-small">
+                    <span>Save changes</span>
+                </button>
+                <a th:href="@{/letters/get}" class="btn-small">
+                    <span>Cancel</span>
+                </a>
+            </div>
+
+            <div id="messageContainer"></div>
+        </div>
+    </div>
+</main>
+</body>
+
+<div th:fragment="scripts">
+<script>
+    let letterTTL = Number(document.getElementById('livingTime').value);
+    let letterPassword = null;
+
+    const livingTimeSlider = document.getElementById('livingTime');
+    const livingTimeValue = document.getElementById('livingTimeValue');
+    const protectedCheckbox = document.getElementById('protectedLetter');
+    const passwordContainer = document.getElementById('passwordContainer');
+    const passwordInputs = document.querySelectorAll('.password-char');
+
+    livingTimeSlider.addEventListener('input', () => {
+        livingTimeValue.textContent = livingTimeSlider.value;
+        letterTTL = Number(livingTimeSlider.value);
+    });
+
+    protectedCheckbox.addEventListener('change', () => {
+        passwordContainer.style.display = protectedCheckbox.checked ? 'flex' : 'none';
+        passwordInputs.forEach(i => i.value = '');
+        letterPassword = null;
+    });
+
+    passwordInputs.forEach((input, idx) => {
+        input.addEventListener('input', () => {
+            if (input.value && idx < 4) passwordInputs[idx + 1].focus();
+            const pass = Array.from(passwordInputs).map(i => i.value).join('');
+            letterPassword = /^[A-Za-z0-9]{5}$/.test(pass) ? pass : null;
+        });
+    });
+
+    document.getElementById('saveButton').addEventListener('click', () => {
+        const payload = {
+            title: document.getElementById('letterTitle').value.trim(),
+            text: document.getElementById('letterContent').value.trim(),
+            ttl: letterTTL,
+            password: letterPassword
+        };
+
+        const token = document.getElementById('publicToken').value;
+
+        fetch(`/letters/edit?publicToken=${encodeURIComponent(token)}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.ok ? showMsg('Saved ✔', 'success') : showMsg('Error ✖', 'danger'))
+        .catch(() => showMsg('Network error', 'danger'));
+    });
+
+    function showMsg(msg, type) {
+        const c = document.getElementById('messageContainer');
+        c.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+        setTimeout(() => c.innerHTML = '', 4000);
+    }
+</script>
+</div>
+</html>

@@ -1,7 +1,10 @@
 package com.example.myproject.Repositories;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.HashOperations;
@@ -35,28 +38,41 @@ public class RedisRepositoryImpl implements RedisRepository {
 
     @Override
     public void add(Letter letter){
-        String key = letter.getPublicToken();
+
+        // Добавляем письмо по ключу -- PUBLIC TOKEN  + 
+        // Добавляем public token в список писем, написанных юзером, 
+        // чтобы потом их все (оставшиеся в живых) 
+        // можно было получать
+        String public_token = letter.getPublicToken();
         
         String script = """
                 redis.call('HSET', KEYS[1], 'text', ARGV[1])
                 redis.call('HSET', KEYS[1], 'title', ARGV[2])
                 redis.call('HSET', KEYS[1], 'email', ARGV[3])
                 redis.call('HSET', KEYS[1], 'password', ARGV[4])
-                redis.call('EXPIRE', KEYS[1], ARGV[5])
+                redis.call('SADD', KEYS[2],  ARGV[5])
+                redis.call('EXPIRE', KEYS[1], ARGV[6])
                 return 1
-                """;
+        """;
+
+
+
         RedisScript<Long> redisScript = RedisScript.of(script, Long.class);
+        
+        String email = letter.getAuthorEmail();
 
         redisTemplate.execute(
             redisScript,
-            List.of(key),
+            List.of(public_token, email),
             letter.getText(),
             letter.getTitle(),
-            letter.getAuthorEmail(),
+            email,
             letter.getPassword(),
+            public_token,
             String.valueOf(letter.getTTL() * 60) // TTL в минутах
         );
 
+    
     }
 
     @Override
@@ -76,7 +92,7 @@ public class RedisRepositoryImpl implements RedisRepository {
         MyAppUser user = new MyAppUser();
         
         user.setEmail((String) data.get("email"));
-        letter.setAuthor(user);
+        letter.setAuthorEmail(user.getEmail());
 
         return letter;
     }
@@ -194,9 +210,57 @@ public class RedisRepositoryImpl implements RedisRepository {
 
 
     @Override
-    public String getAllLetters() {
-        hashOperations.multiGet()
+    public List<Letter> getAllLetters(String email) {
+        if (email == null || email.isEmpty() ){
+            return List.of();
+        }
+
+        if (!Boolean.TRUE.equals(redisTemplate.hasKey(email))){
+            return List.of();
+        }
+
+        List<Letter> listOfLetters = new ArrayList<Letter>();
+        Set<Object> objects = redisTemplate.opsForSet().members(email);
+
+        if (objects == null || objects.isEmpty()){
+            return List.of();
+        }
+
+        Set<String> publicTokens = new HashSet<String>();
+
+        // Преобразуем из Object в String
+        for (Object obj : objects){
+            if (obj != null){
+                publicTokens.add(obj.toString());
+            }
+        }
+
+        
+
+        for (String publicToken : publicTokens){
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(publicToken))){
+
+                Map<String, Object> data = hashOperations.entries(publicToken);
+
+                Letter letter = new Letter();
+                letter.setText(data.get("text").toString());
+                letter.setTitle(data.get("title").toString());
+                letter.setAuthorEmail(data.get("email").toString());
+                letter.setPassword(data.get("password").toString());
+                letter.setPublicToken(publicToken);
+                
+                
+                listOfLetters.add(letter);
+
+            }
+            else{
+                redisTemplate.opsForSet().remove(email, publicToken);
+            }
+        }
+
+        return listOfLetters;
+
     }
-   
+  
   
 }

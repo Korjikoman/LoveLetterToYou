@@ -17,11 +17,8 @@ import com.example.myproject.Repositories.LetterRepository;
 public class LetterService {
     @Autowired
     private LetterRepository repository;
-    
-
-
 
     public Letter checkUniquePublicToken(String token){
         return repository.findByPublicToken(token);
     }
-}
+}   

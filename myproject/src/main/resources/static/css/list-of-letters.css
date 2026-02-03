@@ -1,0 +1,50 @@
+.letters-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: auto;
+}
+
+.letter-card {
+    background: #fff0f5;
+    border: 1px solid #ffccd5;
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.letter-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+.letter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.letter-header h4 {
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    color: #C14B4B;
+}
+
+.edit-btn {
+    font-size: 0.8rem;
+}
+
+.letter-body p {
+    margin: 0.5rem 0;
+    font-family: 'Roboto', sans-serif;
+}
+
+.letter-footer {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #8B0000;
+    font-weight: 500;
+}
