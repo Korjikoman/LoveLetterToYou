@@ -42,14 +42,18 @@ public class RegistrationController {
     public ResponseEntity<String> createUser(@RequestBody MyAppUser user) {
 
         Optional<MyAppUser> existingUserOptional = myAppUserRepository.findByEmail(user.getEmail());
-        MyAppUser existingUser = existingUserOptional.get();
 
-        if (existingUser != null){
+        if (!existingUserOptional.isEmpty()){
+            MyAppUser existingUser = existingUserOptional.get();
+
             if (existingUser.getIsVerified()){
                 return new ResponseEntity<>("User Already Exists And Verified!", HttpStatus.BAD_REQUEST);
             }else{
                 String verificationToken = JwtTokenUtil.generateToken(existingUser.getEmail());
                 existingUser.setVerificationToken(verificationToken);
+                existingUser.isHasAvatar(false);
+                existingUser.setAvatarPath(null);
+
                 myAppUserRepository.save(existingUser);
                 // SEND EMAIL CODe
                 emailService.sendVerificationEmail(existingUser.getEmail(), verificationToken);
@@ -62,6 +66,8 @@ public class RegistrationController {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         String verificationToken = JwtTokenUtil.generateToken(user.getEmail());
         user.setVerificationToken(verificationToken);
+        user.isHasAvatar(false);
+        user.setAvatarPath(null);
         myAppUserRepository.save(user);
         // SEND EMAIL CODe
         emailService.sendVerificationEmail(user.getEmail(), verificationToken);

@@ -131,8 +131,13 @@
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
+        }).then(r => {
+            if (r.ok) {
+                window.location.href = '/letters/get?success=true';
+            } else {
+                showMsg('Error ✖', 'danger');
+            }
         })
-        .then(r => r.ok ? showMsg('Saved ✔', 'success') : showMsg('Error ✖', 'danger'))
         .catch(() => showMsg('Network error', 'danger'));
     });
 

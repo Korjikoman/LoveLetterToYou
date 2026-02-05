@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(
+        title='My profile',
+        content=~{::content},
+        styles=~{::styles},
+        scripts=~{::scripts}
+      )}">
+
+<th:block th:fragment="styles">
+    <link rel="stylesheet" href="/css/profile.css">
+</th:block>
+<main>
+
+   <th:block th:fragment="content">
+        <div class="profile-card">
+
+            <div class="avatar-block">
+                <img id="avatarImage"
+                    th:data-has-avatar="${userHasAvatar}"
+                    th:data-avatar-path="${avatarPath}"
+                    src="/images/default-avatar-icon.jpg"
+                    alt="avatar">
+
+                <label class="avatar-upload">
+                    Change avatar
+                    <input type="file" id="avatarInput" accept="image/*">
+                </label>
+            </div>
+
+            <div class="profile-fields">
+
+                <div class="field">
+                    <label>Username</label>
+                    <input id="usernameInput" type="text" th:value="${username}">
+                </div>
+
+                <div class="field">
+                    <label>Email</label>
+                    <input type="text" th:value="${email}" disabled>
+                </div>
+
+                <div class="field">
+                    <label>New password</label>
+                    <input id="passwordInput" type="password" placeholder="Enter new password">
+                    <div id="passwordWarning" class="password-warning">
+                        After saving, your password will be changed and you will need to confirm it via email.
+                    </div>
+                </div>
+
+                <div class="verification-warning"
+                    th:if="${!passwordIsVerified}">
+                    ⚠ A confirmation link has been sent to your email
+                </div>
+
+                <button id="applyBtn" class="apply-btn">Apply changes</button>
+            </div>
+
+        </div>
+    <div id="toast" class="toast"></div>
+
+    </th:block>
+</main>
+
+
+<th:block th:fragment="scripts">
+    <script src="/js/profile.js"></script>
+</th:block>
+
+</html>

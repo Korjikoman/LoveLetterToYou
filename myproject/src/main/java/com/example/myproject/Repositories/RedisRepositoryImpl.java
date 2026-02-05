@@ -98,8 +98,8 @@ public class RedisRepositoryImpl implements RedisRepository {
     }
 
     @Override
-    public void delete(Letter letter){
-        redisTemplate.delete(letter.getPublicToken());
+    public void delete(String token){
+        redisTemplate.delete(token);
     }
 
 

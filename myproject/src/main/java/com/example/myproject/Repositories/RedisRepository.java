@@ -10,7 +10,7 @@ import com.example.myproject.Model.MyAppUser;
 
 public interface RedisRepository {
     void add(Letter letter);
-    void delete(Letter letter); 
+    void delete(String publicToken); 
     Letter findLetter(String publicToken);
 
 

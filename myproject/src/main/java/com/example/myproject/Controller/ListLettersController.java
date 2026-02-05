@@ -42,6 +42,25 @@ public class ListLettersController {
         return "list-of-letters";
     }
 
+    @PostMapping("/delete")
+    public ResponseEntity<?>  deleteLetter(@RequestParam String publicToken) {
+        if (publicToken == null || publicToken.isEmpty()){
+            return ResponseEntity.badRequest().build();
+        }
+
+        try{
+            
+            redisRepository.delete(publicToken);
+            
+        }catch (Exception e){
+            System.err.println("Ошибка : " + e.getMessage());
+        }
+
+
+        return ResponseEntity.ok().build();
+    }
+    
+
     @GetMapping("/edit")
     public String editLetterFromListOfLettersGET(@RequestParam String publicToken, Model model) {
         Letter letter = redisRepository.findLetter(publicToken);
@@ -58,7 +77,7 @@ public class ListLettersController {
 
     
     @PostMapping("/edit")
-    public String  editLetterFromListOfLettersPOST(@RequestParam String publicToken, @RequestBody Map<String, String>body, Authentication auth) {
+    public ResponseEntity<?>  editLetterFromListOfLettersPOST(@RequestParam String publicToken, @RequestBody Map<String, String>body, Authentication auth) {
         String letterText = body.get("text");
 
         String letterTitle = body.get("title");
@@ -69,7 +88,7 @@ public class ListLettersController {
         Integer ttl = Integer.parseInt(body.get("ttl"));
 
         if (letterText == null || letterText.trim().isEmpty()){
-            return "redirect:/letters/get?error=notfound";
+            return ResponseEntity.badRequest().build();
         }
 
         Letter letter = redisRepository.findLetter(publicToken);
@@ -83,9 +102,9 @@ public class ListLettersController {
         // add работает как и update
         redisRepository.add(letter);
 
+        
 
-
-        return "redirect:/letters/get?success=true";
+        return ResponseEntity.ok().build();
     }
     
 

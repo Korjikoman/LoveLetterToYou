@@ -16,7 +16,7 @@
     <div th:fragment="content">
         <div class="letters-container">
             <h2>My Letters</h2>
-            <div th:if="${param.success}" class="alert alert-success" role="alert">
+            <div id="messageContainer" th:if="${param.success}" class="alert alert-success" role="alert">
                 Letter was successfully updated!
             </div>
             <div th:if="${param.error}" class="alert alert-danger" role="alert">
@@ -31,6 +31,7 @@
                 <div class="letter-header">
                     <h4 th:text="${letter.title}">Letter Title</h4>
                     <button class="btn btn-sm btn-outline-primary edit-btn">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger delete-btn">Delete</button>
                 </div>
                 <div class="letter-body">
                     <p th:text="${letter.text}">Letter text...</p>
@@ -47,7 +48,7 @@
 <div th:fragment="scripts">
     <script>
         const editButtons = document.querySelectorAll('.edit-btn');
-
+        const deleteButtons = document.querySelectorAll('.delete-btn');
         editButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const card = button.closest('.letter-card');
@@ -57,6 +58,46 @@
                 window.location.href = '/letters/edit?publicToken=' + encodeURIComponent(publicToken);
             });
         });
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const card = button.closest('.letter-card');
+                const publicToken = card.dataset.publicToken;
+                fetch("/letters/delete?publicToken=" + encodeURIComponent(publicToken), {
+                    method: "POST",
+                })
+                .then(response => {
+                    if (response.ok){
+                        card.remove();
+                        showTempMessage('Letter deleted', 'success');
+                    } else {
+                        showTempMessage('Delete failed', 'danger');
+                    }
+                })
+                .catch(() => showTempMessage('Network error', 'danger'));
+            })
+        })
+        
+        function showTempMessage(text, type) {
+            let c = document.getElementById('messageContainer');
+            if (!c) {
+                c = document.createElement('div');
+                c.id = 'messageContainer';
+                c.className = 'alert alert-' + type;
+                document.querySelector('.letters-container').prepend(c);
+            }
+            c.textContent = text;
+
+            setTimeout(() => c.remove(), 4000);
+        }
+
+        const c = document.getElementById('messageContainer');
+        if (c){
+        setTimeout(() => {c.remove();}, 4000);
+        }
+
+
+
     </script>
     
 </div>

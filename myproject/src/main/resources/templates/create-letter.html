@@ -191,14 +191,12 @@
             .catch(() => {
                 alert('Cannot load modal :(');
             })
-        
-
             
         }
 
         setInterval(() => {
-            fetch("/api/letter/heartbeat-writing-letter", {method : "POST"}); 5000
-        })
+            fetch("/api/letter/heartbeat-writing-letter", {method : "POST"});
+        }, 5000)
 
 
         
