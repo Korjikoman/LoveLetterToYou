@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -42,7 +43,9 @@ public class LetterController {
     @Autowired
     private RedisRepository redisRepository;
     
-
+    
+    @Value("${app.public-url}")
+    private String publicURL;
     
 
     @PostMapping(value="/letter", consumes="application/json")
@@ -109,9 +112,7 @@ public class LetterController {
         // Сохраняем письмо в Redis
         redisRepository.add(letter);
 
-        String url = getURL(request);
-
-        fullURL = url + "/watch/letter"+ "/" + publicToken; 
+        fullURL = publicURL + "/watch/letter/" + publicToken; 
 
         return ResponseEntity.ok(fullURL);
     }

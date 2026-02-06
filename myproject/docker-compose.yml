@@ -31,12 +31,12 @@ services:
       timeout: 5s
       retries: 5
   
-  # Spring Boot Application
-  app:
+  # Spring Boot Application NUMERO UNO
+  app-1:
     build: .
-    container_name: myproject-app
-    ports:
-      - "8080:8080"
+    container_name: myproject-app-1
+    expose:
+      - "8080"
     depends_on:  
       - postgres
       - redis
@@ -47,15 +47,74 @@ services:
       SPRING_DATASOURCE_PASSWORD: 123
       SPRING_DATA_REDIS_HOST: redis-service
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_REDIS_HOST: redis  # Попробуйте этот вариант
-      SPRING_REDIS_PORT: 6379
       SPRING_MAIL_HOST: smtp.gmail.com
       SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: showmasniok@gmail.com
-      SPRING_MAIL_PASSWORD: kidwqkkfgswxvfiz
+      SPRING_MAIL_USERNAME: your_mail@gmail.com
+      SPRING_MAIL_PASSWORD: yourPassword
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
     restart: unless-stopped
+
+  # Spring Boot Application NUMERO DOS
+  app-2:
+    build: .
+    container_name: myproject-app-2
+    expose:
+      - "8080"
+    depends_on:  
+      - postgres
+      - redis
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/registration
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123
+      SPRING_DATA_REDIS_HOST: redis-service
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: your_mail@gmail.com
+      SPRING_MAIL_PASSWORD: yourPassword
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+    restart: unless-stopped
+
+  # Spring Boot Application NUMERO TRES
+  app-3:
+    build: .
+    container_name: myproject-app-3
+    expose:
+      - "8080"
+    depends_on:  
+      - postgres
+      - redis
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/registration
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123
+      SPRING_DATA_REDIS_HOST: redis-service
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: your_mail@gmail.com
+      SPRING_MAIL_PASSWORD: yourPassword
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+    restart: unless-stopped
+
+  # NGINX LOAD BALANCER
+  nginx:
+    image: nginx:latest
+    container_name: nginx-load-balancer
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app-1
+      - app-2
+      - app-3
 
 volumes:
   postgres_data:

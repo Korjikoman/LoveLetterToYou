@@ -43,6 +43,5 @@ build/
 .env
 /src/main/resources/application.yml
 application.yml
-
 /uploads
 /uploads/avatars

@@ -38,6 +38,11 @@ public class ContentController {
     public String signup() {
         return "signup";
     }
+
+    @GetMapping("/check")
+    public String instance() {
+        return System.getenv("HOSTNAME");
+    }
     
     @GetMapping("/create/letter/geturl")
     public String getURL() {
