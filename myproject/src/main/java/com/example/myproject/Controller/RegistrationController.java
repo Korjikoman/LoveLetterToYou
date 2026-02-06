@@ -56,7 +56,7 @@ public class RegistrationController {
 
                 myAppUserRepository.save(existingUser);
                 // SEND EMAIL CODe
-                emailService.sendVerificationEmail(existingUser.getEmail(), verificationToken);
+                //emailService.sendVerificationEmail(existingUser.getEmail(), verificationToken);
                 return new ResponseEntity<>("Verification email resent. Check your email-box!", HttpStatus.OK);
 
 
@@ -70,7 +70,7 @@ public class RegistrationController {
         user.setAvatarPath(null);
         myAppUserRepository.save(user);
         // SEND EMAIL CODe
-        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+        //emailService.sendVerificationEmail(user.getEmail(), verificationToken);
 
         return new ResponseEntity<>("Successfully registered! Verify your email in email-box :)", HttpStatus.OK);
     }
