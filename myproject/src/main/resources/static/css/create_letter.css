@@ -107,3 +107,136 @@
     color: #d4a5a5;
     font-style: italic;
 }
+
+/* Слайдер */
+.slider-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 1.5rem;
+}
+
+#livingTime {
+    width: 100%;
+    margin-top: 0.5rem;
+    -webkit-appearance: none;
+    height: 8px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #C14B4B 0%, #9370DB 100%);
+    outline: none;
+}
+
+#livingTime::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #C14B4B;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#livingTime::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #C14B4B;
+    cursor: pointer;
+}
+
+/* Protected Letter */
+.checkbox-label {
+    font-size: 1rem;
+    color: #8B0000;
+    cursor: pointer;
+    user-select: none;
+}
+
+.password-block {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+#passwordInputs {
+    display: flex;
+    gap: 10px;
+    margin-top: 0.5rem;
+}
+
+.password-char {
+    width: 40px;
+    height: 45px;
+    text-align: center;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    border: 2px solid #FFE4E1;
+    font-weight: bold;
+    color: #8B0000;
+}
+
+.password-char:focus {
+    outline: none;
+    border-color: #C14B4B;
+    box-shadow: 0 0 10px rgba(193, 75, 75, 0.2);
+}
+
+#setPasswordButton {
+    margin-top: 10px;
+    display: none;
+    background: linear-gradient(135deg, #9370DB 0%, #C14B4B 100%);
+    color: #fff;
+    border: none;
+    padding: 0.7rem 2rem;
+    font-size: 1rem;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 3px 10px rgba(147, 112, 219, 0.2);
+    transition: all 0.3s ease;
+}
+
+#setPasswordButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(193, 75, 75, 0.3);
+}
+/* Малые кнопки */
+.btn-small {
+    background: linear-gradient(135deg, #9370DB 0%, #C14B4B 100%);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1.5rem; /* уменьшенный padding */
+    font-size: 0.9rem;       /* меньше размер текста */
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0 0.3rem;
+    box-shadow: 0 3px 8px rgba(147, 112, 219, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-small:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(193, 75, 75, 0.3);
+}
+
+.btn-small:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(193, 75, 75, 0.2);
+}
+
+.btn-small span {
+    margin-right: 0.5rem;
+    font-size: 1rem;
+}
+
+.btn-small::after {
+    content: '💝';
+    font-size: 1rem; /* уменьшить иконку */
+    right: 0.8rem;
+}
+

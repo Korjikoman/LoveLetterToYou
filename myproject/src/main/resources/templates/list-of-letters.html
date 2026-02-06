@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout :: layout (
+        title='MY letters',
+        content = ~{::content},
+        styles = ~{::styles},
+        scripts = ~{::scripts}
+    )}">
+<head>
+    <div th:fragment="styles">
+        <link rel="stylesheet" href="/css/list-of-letters.css">
+    </div>
+</head>
+<body>
+    <main>
+    <div th:fragment="content">
+        <div class="letters-container">
+            <h2>My Letters</h2>
+            <div id="messageContainer" th:if="${param.success}" class="alert alert-success" role="alert">
+                Letter was successfully updated!
+            </div>
+            <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                Something went wrong. Please try again.
+            </div>
+            <div th:if="${#lists.isEmpty(letters)}">
+                <p>No letters yet. <a th:href="@{/create/letter}">Create one</a>.</p>
+            </div>
+
+            <div class="letter-card" th:each="letter : ${letters}" 
+                th:data-public-token="${letter.publicToken}">
+                <div class="letter-header">
+                    <h4 th:text="${letter.title}">Letter Title</h4>
+                    <button class="btn btn-sm btn-outline-primary edit-btn">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger delete-btn">Delete</button>
+                </div>
+                <div class="letter-body">
+                    <p th:text="${letter.text}">Letter text...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+</body>
+
+
+<div th:fragment="scripts">
+    <script>
+        const editButtons = document.querySelectorAll('.edit-btn');
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+        editButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const card = button.closest('.letter-card');
+                const publicToken = card.dataset.publicToken;
+
+                // Редирект на страницу редактирования
+                window.location.href = '/letters/edit?publicToken=' + encodeURIComponent(publicToken);
+            });
+        });
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const card = button.closest('.letter-card');
+                const publicToken = card.dataset.publicToken;
+                fetch("/letters/delete?publicToken=" + encodeURIComponent(publicToken), {
+                    method: "POST",
+                })
+                .then(response => {
+                    if (response.ok){
+                        card.remove();
+                        showTempMessage('Letter deleted', 'success');
+                    } else {
+                        showTempMessage('Delete failed', 'danger');
+                    }
+                })
+                .catch(() => showTempMessage('Network error', 'danger'));
+            })
+        })
+        
+        function showTempMessage(text, type) {
+            let c = document.getElementById('messageContainer');
+            if (!c) {
+                c = document.createElement('div');
+                c.id = 'messageContainer';
+                c.className = 'alert alert-' + type;
+                document.querySelector('.letters-container').prepend(c);
+            }
+            c.textContent = text;
+
+            setTimeout(() => c.remove(), 4000);
+        }
+
+        const c = document.getElementById('messageContainer');
+        if (c){
+        setTimeout(() => {c.remove();}, 4000);
+        }
+
+
+
+    </script>
+    
+</div>
+</html>

@@ -22,18 +22,39 @@ public class Letter {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "author_id", referencedColumnName = "id", nullable = false)
-    private MyAppUser author; 
+    private String authorEmail; 
 
     private String title;
     private String text;
     
+    private String password;
+    private Integer ttl;
+
+    public void setPassword(String newPassword){
+        this.password = newPassword;
+    }
+
+    public String getPassword(){
+        return this.password;
+    }
+
+
+    public void setTTL(Integer ttl){
+        this.ttl = ttl;
+    }
+
+    public Integer getTTL(){
+        return this.ttl;
+    }
+
+
     @Column(name="public_token", nullable=false, unique=true)
     private String publicToken;
 
     @Column(nullable = false, name = "created_at")
     private LocalDateTime createdAt;
+
+    
 
     public void setCreatedAt(LocalDateTime time){
         createdAt = time;
@@ -47,15 +68,13 @@ public class Letter {
         return this.id;
     }
 
-    public Long getAuthorID(){
-        return this.author.getId();
-    }
-    public String getAuthorEmail(){
-        return this.author.getEmail();
+
+    public void setAuthorEmail(String email){
+        this.authorEmail = email;
     }
 
-    public void setAuthor(MyAppUser author){
-        this.author = author;
+    public String getAuthorEmail(){
+        return this.authorEmail;
     }
 
     public void setTitle(String newTitle){

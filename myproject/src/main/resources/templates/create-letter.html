@@ -10,6 +10,8 @@
     <div th:fragment="styles">
         <link rel="stylesheet" href="/css/create_letter.css">
     </div>
+    <script src="/js/create-letter.js" defer></script>
+
 
 </head>
 
@@ -41,10 +43,42 @@
                         placeholder="My dearest love, 💕&#10;&#10;Today I want to tell you...&#10;&#10;With all my heart,"
                         required></textarea>
                 </div>
+
+                <div class="form-group slider-group">
+                    <label for="livingTime">Letter's living time: <span id="livingTimeValue">60</span> min</label>
+                    <input type="range" id="livingTime" name="livingTime" min="1" max="1440" value="60">
+                </div>
+
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="protectedLetter"> Protected Letter
+                    </label>
+                </div>
+
+                <div class="form-group password-block" id="passwordContainer">
+                    <label>Enter 5-character password (letters + numbers)</label>
+                    <div id="passwordInputs">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
+                    </div>
+                    <button type="button" id="setPasswordButton">Set password</button>
+                </div>
+
+
             </form>
             <div class="btn-container">
-                <button type="button" id="createButton" class="btn-create">
+                <button type="button" id="createButtonSendLoveLetter" class="btn-small">
                     <span>Send Love Letter</span>
+                </button>
+                <button type="button" id="setPasswordButton" class="btn-small">
+                    <span>Set Password</span>
+                </button>
+                <button type="button" id="cancelButton" class="btn-small">
+                    <span>Cancel</span>
                 </button>
             </div>
             <p style="
@@ -59,13 +93,59 @@
         </div>
 
     </div>
-    
+
+
 </main>
 
 </body>
 <div th:fragment="scripts">
     <script>
-        const createLetterButton = document.getElementById("createButton");
+        
+        let letterPassword = ""; // сюда сохраняем пароль после нажатия Set Password
+        let letterTTL = 60;      // начальное время в минутах
+
+        const setPasswordButton = document.getElementById('setPasswordButton');
+        const passwordInputs = document.querySelectorAll('.password-char');
+        const livingTimeSlider = document.getElementById('livingTime');
+        const livingTimeValue = document.getElementById('livingTimeValue');
+
+        const protectedCheckbox = document.getElementById('protectedLetter');
+        const passwordContainer = document.getElementById('passwordContainer');
+
+        protectedCheckbox.addEventListener('change', () => {
+            passwordContainer.style.display = protectedCheckbox.checked ? 'flex' : 'none';
+            setPasswordButton.style.display = 'none';
+            passwordInputs.forEach(input => input.value = '');
+        });
+
+        passwordInputs.forEach((input, idx) => {
+            input.addEventListener('input', () => {
+                if (input.value.length === 1 && idx < passwordInputs.length - 1) {
+                    passwordInputs[idx + 1].focus();
+                }
+                validatePassword();
+            });
+        });
+
+        function validatePassword() {
+            const password = Array.from(passwordInputs).map(i => i.value).join('');
+            const regex = /^[A-Za-z0-9]{5}$/;
+            setPasswordButton.style.display = regex.test(password) ? 'inline-block' : 'none';
+        }
+
+        // Слайдер
+        livingTimeSlider.addEventListener('input', () => {
+            livingTimeValue.textContent = livingTimeSlider.value;
+            letterTTL = Number(livingTimeSlider.value);
+        });
+
+        setPasswordButton.addEventListener('click', () => {
+            letterPassword = Array.from(passwordInputs).map(i => i.value).join('');
+            alert("Password set!");
+        });
+
+        // NIGAAAAAAAAAAAAAAAAAAAAAA 
+        const createLetterButton = document.getElementById("createButtonSendLoveLetter");
 
         createLetterButton.addEventListener('click', () => {
             const letterContent = document.getElementById('letterContent');
@@ -77,14 +157,24 @@
                 return;
             }
 
+            const payload = {
+                title: title,
+                text: letterText,
+                password: letterPassword || null, // если пароль не установлен — null
+                ttl: letterTTL // время жизни письма в минутах
+            };
+
             fetch('/create/letter', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: letterText, title: title})
+                body: JSON.stringify(payload)
             })
             .then(response => response.text())
             .then(data => {
                 showSuccessModal(data);
+                // Очистка переменных после отправки
+                letterPassword = "";
+                letterTTL = 60;
             })
             .catch(() => {
                 alert('Network error 🥀');
@@ -101,10 +191,15 @@
             .catch(() => {
                 alert('Cannot load modal :(');
             })
-        
-
             
         }
+
+        setInterval(() => {
+            fetch("/api/letter/heartbeat-writing-letter", {method : "POST"});
+        }, 5000)
+
+
+        
 
     </script>
     

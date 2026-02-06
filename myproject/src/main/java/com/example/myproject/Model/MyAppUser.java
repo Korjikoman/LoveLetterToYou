@@ -21,9 +21,31 @@ public class MyAppUser {
     private String verificationToken;
     private boolean isVerified;
 
+    @Column(name="avatar_path")
+    private String avatarPath;
+
     @Column(name = "reset_token")
     private String resetToken;
 
+    @Column(name = "user_has_avatar", nullable = false)
+    private boolean hasAvatar;
+
+    public void isHasAvatar(boolean hasAvatar){
+        this.hasAvatar = hasAvatar;
+    }
+
+    public boolean gethasAvatar(){
+        return this.hasAvatar;
+    }
+
+
+    public void setAvatarPath(String new_path){
+        this.avatarPath = new_path;
+    }
+
+    public String getAvatarPath(){
+        return this.avatarPath;
+    }
 
     public void setVerificationToken(String verificationToken){
         this.verificationToken = verificationToken;

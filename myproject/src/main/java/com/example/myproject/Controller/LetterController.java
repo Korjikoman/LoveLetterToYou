@@ -1,5 +1,6 @@
 package com.example.myproject.Controller;
 
+import java.sql.Time;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,6 +41,9 @@ public class LetterController {
 
     @Autowired
     private RedisRepository redisRepository;
+    
+
+    
 
     @PostMapping(value="/letter", consumes="application/json")
     @ResponseBody
@@ -49,6 +53,11 @@ public class LetterController {
 
         String letterTitle = body.get("title");
 
+        String password = body.get("password");
+
+        Integer ttl = Integer.parseInt(body.get("ttl"));
+        
+        
         if (letterText == null || letterText.trim().isEmpty()){
             return new ResponseEntity<>("Letter text cannot be empty", HttpStatus.BAD_REQUEST);
         }
@@ -65,21 +74,32 @@ public class LetterController {
         }
         
         MyAppUser user = userOptional.get();
-        
+
 
         // Создаем новое письмо
         Letter letter = new Letter();
         letter.setText(letterText);
 
+        // добавляем пароль
+        if (password == null || password.isEmpty()){
+            letter.setPassword("");
+        }else{
+            letter.setPassword(password);
+        }
+
+        // Добавляем ttl
+        letter.setTTL(ttl);
+
         // ДОБАВИТЬ TITLE в html
         letter.setTitle(letterTitle);
-        letter.setAuthor(user);
+        letter.setAuthorEmail(user.getEmail());
 
         // генерируем уникальный токен
         String publicToken = PublicToken.generatePublicToken();
         String fullURL;
-
         while (letterService.checkUniquePublicToken(publicToken) != null) {
+            System.out.println("GENERATING A TOKEN");
+            
             publicToken = PublicToken.generatePublicToken();
 
         };
@@ -95,8 +115,6 @@ public class LetterController {
 
         return ResponseEntity.ok(fullURL);
     }
-
-    
     
 
     public  String getURL(HttpServletRequest request){

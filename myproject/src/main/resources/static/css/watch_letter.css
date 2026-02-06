@@ -100,9 +100,13 @@ body {
     border-radius: 15px;
     box-shadow: 0 4px 20px var(--shadow);
     padding: 2rem;
+
     transform: scale(0);
     animation: unfold 1s forwards;
     animation-delay: 0.5s;
+
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 @keyframes unfold {
@@ -126,11 +130,18 @@ body {
 .letter-card p {
     font-family: 'Playfair Display', serif;
     font-size: 1.2rem;
+
     white-space: pre-line;
+
+
+    overflow-wrap: break-word;
+    word-break: break-word;
+
     opacity: 0;
     animation: fadeIn 3s forwards;
     animation-delay: 4s;
 }
+
 
 .letter-card .author {
     margin-top: 2rem;
