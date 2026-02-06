@@ -23,12 +23,21 @@ public class Letter {
     private Long id;
 
     private String authorEmail; 
-
+    private String username;
     private String title;
     private String text;
     
     private String password;
     private Integer ttl;
+
+    public void setUsername(String username){
+        this.username = username;
+    }
+
+    public String getUsername(){
+        return this.username;
+    }
+
 
     public void setPassword(String newPassword){
         this.password = newPassword;

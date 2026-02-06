@@ -31,7 +31,7 @@ public class WatchLetterController {
         if (letter.getPassword().isEmpty() || letter.getPassword() == null){
             model.addAttribute("letterTitle", letter.getTitle());
             model.addAttribute("letterText", letter.getText());
-            model.addAttribute("authorEmail", letter.getAuthorEmail());
+            model.addAttribute("authorEmail", letter.getUsername());
 
             return "open-letter-and-watch-content";
         }
@@ -48,7 +48,7 @@ public class WatchLetterController {
         if (password.equals(pwd)){
             model.addAttribute("letterTitle", letter.getTitle());
             model.addAttribute("letterText", letter.getText());
-            model.addAttribute("authorEmail", letter.getAuthorEmail());
+            model.addAttribute("authorEmail", letter.getUsername());
            return "open-letter-and-watch-content";
         }
         else{

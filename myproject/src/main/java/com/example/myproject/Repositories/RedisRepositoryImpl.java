@@ -49,9 +49,10 @@ public class RedisRepositoryImpl implements RedisRepository {
                 redis.call('HSET', KEYS[1], 'text', ARGV[1])
                 redis.call('HSET', KEYS[1], 'title', ARGV[2])
                 redis.call('HSET', KEYS[1], 'email', ARGV[3])
-                redis.call('HSET', KEYS[1], 'password', ARGV[4])
-                redis.call('SADD', KEYS[2],  ARGV[5])
-                redis.call('EXPIRE', KEYS[1], ARGV[6])
+                redis.call('HSET', KEYS[1], 'username', ARGV[4])
+                redis.call('HSET', KEYS[1], 'password', ARGV[5])
+                redis.call('SADD', KEYS[2],  ARGV[6])
+                redis.call('EXPIRE', KEYS[1], ARGV[7])
                 return 1
         """;
 
@@ -67,6 +68,7 @@ public class RedisRepositoryImpl implements RedisRepository {
             letter.getText(),
             letter.getTitle(),
             email,
+            letter.getUsername(),
             letter.getPassword(),
             public_token,
             String.valueOf(letter.getTTL() * 60) // TTL в минутах
@@ -93,6 +95,7 @@ public class RedisRepositoryImpl implements RedisRepository {
         
         user.setEmail((String) data.get("email"));
         letter.setAuthorEmail(user.getEmail());
+        letter.setUsername((String) data.get("username"));
 
         return letter;
     }

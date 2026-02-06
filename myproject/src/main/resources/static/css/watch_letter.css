@@ -12,11 +12,13 @@ body {
     min-height: 100vh;
     font-family: 'Roboto', sans-serif;
     background: linear-gradient(to bottom, var(--pink-light), var(--pink-soft));
+
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    overflow: hidden;
+    justify-content: center;
+
+    overflow-y: auto;
 }
 
 /* Летающие сердечки */
@@ -90,12 +92,12 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 100px;
 }
 
 .letter-card {
     max-width: 700px;
     width: 90%;
+    max-height: 75vh;
     background: rgba(255, 245, 245, 0.95);
     border-radius: 15px;
     box-shadow: 0 4px 20px var(--shadow);
@@ -106,6 +108,7 @@ body {
     animation-delay: 0.5s;
 
     overflow-wrap: break-word;
+    overflow-y: auto;
     word-wrap: break-word;
 }
 
@@ -161,4 +164,3 @@ body {
         opacity: 1;
     }
 }
-

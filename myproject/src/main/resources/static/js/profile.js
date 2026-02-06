@@ -44,22 +44,19 @@ document.addEventListener("DOMContentLoaded", () => {
         if (password) formData.append("password", password);
         if (avatarFile) formData.append("file", avatarFile);
 
-        try {
-            const response = await fetch("/profile/get", {
-                method: "POST",
-                body: formData
-            });
-            const data = await response.json();
+        
+        const response = await fetch("/profile/get", {
+            method: "POST",
+            body: formData
+        });
+        const data = await response.json();
 
-            if (data.success) {
-                showToast(data.message);
-            } else {
-                showToast(data.message, true);
-            }
-        } catch (err) {
-            console.error(err);
-            showToast("Error while saving changes", true);
+        if (data.success) {
+            showToast(data.message);
+        } else {
+            showToast(data.message, true);
         }
+    
     });
 
 

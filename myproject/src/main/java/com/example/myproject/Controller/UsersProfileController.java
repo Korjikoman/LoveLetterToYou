@@ -5,11 +5,14 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -111,20 +114,23 @@ public class UsersProfileController {
         return "users-profile";
     }
 
-    @PostMapping(value = "/get", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String changeValues(
+    @PostMapping(value = "/get")
+    public ResponseEntity<Map<String, Object>> changeValues(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String password,
             @RequestParam(required = false) MultipartFile file,
             Authentication auth
     ) {
-
-        String email = auth.getName();
-
-        MyAppUser user = myAppUserRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Map<String, Object> response = new HashMap<>();
+        
 
         try {
+
+            String email = auth.getName();
+
+            MyAppUser user = myAppUserRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
             if (username != null && !username.isBlank()) {
                 user.setUsername(username);
             }
@@ -143,13 +149,16 @@ public class UsersProfileController {
             }
 
             myAppUserRepository.save(user);
+            response.put("success", true);
+            response.put("message", "Profile updated successfully");
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/profile/get?error=true";
+            response.put("success", false);
+            response.put("message", "Failed to update profile");
         }
 
-        return "redirect:/profile/get?success=true";
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
 

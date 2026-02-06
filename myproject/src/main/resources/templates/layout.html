@@ -7,7 +7,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title th:text="${title}">Romantic Letter Service</title>
+    <title th:text="'Hello, ' + ${username} + ' | Romantic Letters'">
+        Romantic Letters
+    </title>
 
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
@@ -170,6 +172,39 @@
                 gap: 1rem;
             }
         }
+        #createLetter {
+            position: relative;
+            background: linear-gradient(
+                270deg,
+                #ff6a88,
+                #ff99ac,
+                #c471ed,
+                #ff6a88
+            );
+            background-size: 600% 600%;
+            animation: gradientFlow 6s ease infinite;
+
+            color: #fff !important;
+            font-weight: 500;
+            box-shadow: 0 0 12px rgba(255, 105, 180, 0.6);
+        }
+        @keyframes gradientFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        #createLetter:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.9);
+        }
+
+
     </style>
     <th:block th:replace="${styles} ?: ~{}"></th:block>
 
