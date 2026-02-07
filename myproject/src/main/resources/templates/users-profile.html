@@ -10,9 +10,10 @@
 <th:block th:fragment="styles">
     <link rel="stylesheet" href="/css/profile.css">
 </th:block>
-<main>
+
 
    <th:block th:fragment="content">
+    <main>
         <div class="profile-card">
 
             <div class="avatar-block">
@@ -57,11 +58,13 @@
             </div>
 
         </div>
-    <div id="toast" class="toast"></div>
+    
+    </main>
 
-    </th:block>
-</main>
 
+   
+
+</th:block>
 
 <th:block th:fragment="scripts">
     <script src="/js/profile.js"></script>

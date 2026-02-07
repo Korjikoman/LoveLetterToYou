@@ -1,6 +1,7 @@
 package com.example.myproject.Config;
 
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -18,9 +19,17 @@ import com.example.myproject.Services.MessageSubscriber;
 
 @Configuration
 public class RedisConfiguration{
+
+    
+    @Value("${spring.data.redis.host}")
+    private String host;
+
+    @Value("${spring.data.redis.port}")
+    private Integer port;
+
     @Bean
     JedisConnectionFactory jedisConnectionFactory(){
-        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration("redis", 6379);
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(host, port);
         return new JedisConnectionFactory(config);
     }
 

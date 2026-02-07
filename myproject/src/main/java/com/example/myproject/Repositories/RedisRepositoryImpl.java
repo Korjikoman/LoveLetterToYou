@@ -1,6 +1,7 @@
 package com.example.myproject.Repositories;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -211,6 +212,38 @@ public class RedisRepositoryImpl implements RedisRepository {
         redisTemplate.expire("user:writing:"+email, TIME_TO_LIVE_USER_WRITING_LETTER, TimeUnit.SECONDS);
     }
 
+    @Override
+    public Map<Object, Object> dumpTestData() {
+    Map<Object, Object> result = new HashMap<>();
+    Set<String> keys = redisTemplate.keys("*");
+    if (keys == null) return result;
+
+    for (String key : keys) {
+        String type = redisTemplate.type(key).code(); // получаем тип ключа
+
+        switch (type) {
+            case "string":
+                result.put(key, redisTemplate.opsForValue().get(key));
+                break;
+            case "hash":
+                result.put(key, redisTemplate.opsForHash().entries(key));
+                break;
+            case "list":
+                result.put(key, redisTemplate.opsForList().range(key, 0, -1));
+                break;
+            case "set":
+                result.put(key, redisTemplate.opsForSet().members(key));
+                break;
+            case "zset":
+                result.put(key, redisTemplate.opsForZSet().rangeWithScores(key, 0, -1));
+                break;
+            default:
+                result.put(key, "Unsupported type: " + type);
+        }
+    }
+
+    return result;
+}
 
     @Override
     public List<Letter> getAllLetters(String email) {
