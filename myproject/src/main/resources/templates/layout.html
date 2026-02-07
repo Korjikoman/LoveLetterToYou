@@ -226,6 +226,9 @@
 
 <header>
     <a th:href="@{/index}" class="logo">Romantic Letters</a>
+    <p th:text="'Hello, ' + ${username}">
+        Romantic Letters
+    </p>
     <div class="status">
         <!-- <div>Logged as: <strong th:text="${user.email}"></strong></div> -->
         <div>Online users: <strong id="usersOnlineCounter"></strong></div>

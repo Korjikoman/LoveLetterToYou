@@ -33,6 +33,7 @@ build/
 .vscode/*
 /vscode/
 /vscode/settings.json
+../.vscode/launch.json
 
 # Sensitive data
 *.p12
