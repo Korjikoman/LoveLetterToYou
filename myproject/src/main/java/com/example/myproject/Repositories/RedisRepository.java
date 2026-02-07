@@ -23,5 +23,5 @@ public interface RedisRepository {
     void updateUserWritingLetter(String email);
     void updateUserOnline(String email);
     List<Letter> getAllLetters(String email);
-
+    Map<Object, Object> dumpTestData();
 }

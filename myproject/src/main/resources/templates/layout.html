@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title th:text="'Hello, ' + ${username} + ' | Romantic Letters'">
+    <title th:text="'Romantic Letters'">
         Romantic Letters
     </title>
 
@@ -226,8 +226,7 @@
 
 <header>
     <a th:href="@{/index}" class="logo">Romantic Letters</a>
-    <p th:text="'Hello, ' + ${username}">
-        Romantic Letters
+    <p id="usernameP">
     </p>
     <div class="status">
         <!-- <div>Logged as: <strong th:text="${user.email}"></strong></div> -->
@@ -250,7 +249,7 @@
     <!-- СЮДА ПОДСТАВЛЯЕТСЯ КОНТЕНТ -->
     <th:block  th:replace="${content} ?: ~{}"></th:block>
 </main>
-
+ <div id="toast" class="toast"></div>
 <footer>
     © Romantic Letter Service
 </footer>
@@ -268,6 +267,7 @@
 
             document.getElementById("usersOnlineCounter").innerText = obj.usersOnline;
             document.getElementById("usersWritingLetterCounter").innerText = obj.usersWritingLetter;
+            document.getElementById("usernameP").innerText = 'Hello, ' + obj.username;
         }
 
         ws.onclose = () => {
