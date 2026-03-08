@@ -1,25 +1,23 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: postgres
     environment:
-      POSTGRES_DB: registration
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
   
-  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -31,7 +29,6 @@ services:
       timeout: 5s
       retries: 5
   
-  # Spring Boot Application NUMERO UNO
   app-1:
     build: .
     container_name: myproject-app-1
@@ -41,22 +38,23 @@ services:
       - postgres
       - redis
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/registration
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 123
-      SPRING_DATA_REDIS_HOST: redis-service
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_MAIL_HOST: smtp.gmail.com
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: your_mail@gmail.com
-      SPRING_MAIL_PASSWORD: yourPassword
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL}
     restart: unless-stopped
 
-  # Spring Boot Application NUMERO DOS
   app-2:
+    # ... аналогично app-1, используем те же переменные ...
     build: .
     container_name: myproject-app-2
     expose:
@@ -65,21 +63,21 @@ services:
       - postgres
       - redis
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/registration
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 123
-      SPRING_DATA_REDIS_HOST: redis-service
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_MAIL_HOST: smtp.gmail.com
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: your_mail@gmail.com
-      SPRING_MAIL_PASSWORD: yourPassword
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL}
     restart: unless-stopped
 
-  # Spring Boot Application NUMERO TRES
   app-3:
     build: .
     container_name: myproject-app-3
@@ -89,21 +87,21 @@ services:
       - postgres
       - redis
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/registration
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 123
-      SPRING_DATA_REDIS_HOST: redis-service
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_MAIL_HOST: smtp.gmail.com
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: your_mail@gmail.com
-      SPRING_MAIL_PASSWORD: yourPassword
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL}
     restart: unless-stopped
 
-  # NGINX LOAD BALANCER
   nginx:
     image: nginx:latest
     container_name: nginx-load-balancer
