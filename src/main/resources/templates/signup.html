@@ -1,48 +1,84 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <title>Registration</title>
-        <meta name="_csrf" th:content="${_csrf.token}">
-        <meta name="_csrf_header" th:content="${_csrf.headerName}">
-        <link rel="stylesheet" href="/css/style.css">
-        <script src="/js/csrf.js"></script>
-        <script src="/js/signup.js" defer></script>
-        <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-        <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    </head>
-    <body>
-        <section>
-            <form method="post" action="/req/login">
-                <h1>Sign up</h1>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffd3e0">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>Sign up · Romantic Letters</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/csrf.js"></script>
+    <script src="/js/signup.js" defer></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body>
+    <a class="auth-brand" th:href="@{/index}">
+        <span aria-hidden="true">💌</span>
+        <span>Romantic Letters</span>
+    </a>
+
+    <div class="auth-sparkles" aria-hidden="true">
+        <span>✦</span><span>♥</span><span>✿</span><span>✧</span>
+    </div>
+
+    <section class="auth-shell" aria-labelledby="signup-title">
+        <div class="auth-art" aria-hidden="true">
+            <div class="auth-envelope">
+                <span class="auth-envelope-heart">💖</span>
+            </div>
+            <h2>Start your story</h2>
+            <p>A cozy corner for every message that deserves to feel special.</p>
+        </div>
+
+        <div class="auth-card">
+            <p class="auth-eyebrow">Join the sweetest post office</p>
+            <h1 id="signup-title">Make your mailbox</h1>
+            <p class="auth-intro">A few tiny details, then you can begin writing from the heart.</p>
+
+            <form class="auth-form" method="post" action="/req/login">
                 <div class="inputbox">
-                    <ion-icon name="mail-outline"></ion-icon>
-                    <input type="text" id="username" name="username" required>
-                    <label for="username">username</label>
+                    <label for="username">Username</label>
+                    <div class="input-control">
+                        <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+                        <input type="text" id="username" name="username" autocomplete="username" required>
+                    </div>
                 </div>
+
                 <div class="inputbox">
-                    <ion-icon name="mail-outline"></ion-icon>
-                    <input type="text" id="email" name="email" required>
-                    <label for="email">email</label>
+                    <label for="email">Email address</label>
+                    <div class="input-control">
+                        <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+                        <input type="email" id="email" name="email" autocomplete="email" required>
+                    </div>
                 </div>
+
                 <div class="inputbox">
-                    <ion-icon name="lock-closed-outline"></ion-icon>
-                    <input type="password" id="password" name="password" required>
                     <label for="password">Password</label>
+                    <div class="input-control">
+                        <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+                        <input type="password" id="password" name="password" autocomplete="new-password" required>
+                    </div>
                 </div>
+
                 <div class="inputbox">
-                    <ion-icon name="lock-closed-outline"></ion-icon>
-                    <input type="password" id="passwordcon" name="passwordcon" required>
                     <label for="passwordcon">Repeat password</label>
+                    <div class="input-control">
+                        <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+                        <input type="password" id="passwordcon" name="passwordcon" autocomplete="new-password" required>
+                    </div>
                 </div>
-                <button id="submit" type="button">Sign Up</button>
-                <div class="register">
-                    <p>Already have an account? <a th:href="@{/req/login}">Log In</a></p>
-                </div>
+
+                <button class="auth-submit" id="submit" type="button">Create my account <span aria-hidden="true">→</span></button>
             </form>
-            
-        </section>
-    </body>
-</html>
+
+            <div class="register">
+                <p>Already have a mailbox? <a th:href="@{/req/login}">Log in</a></p>
+            </div>
+        </div>
+    </section>
+
 <script>
     const submitButton = document.getElementById("submit");
     submitButton.addEventListener('click', () =>{
@@ -81,3 +117,5 @@
         }
     })
 </script>
+</body>
+</html>

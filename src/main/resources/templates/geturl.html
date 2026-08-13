@@ -1,28 +1,27 @@
-<link rel="stylesheet" href="/css/modal_url.css">
-
-<div class="modal-overlay">
-    <div class="modal-card ">
-        <h2>💖 Letter Saved</h2>
+<div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="saved-letter-title">
+    <div class="modal-card">
+        <button class="modal-close" type="button" aria-label="Close share dialog">×</button>
+        <div class="saved-stamp" aria-hidden="true">💖</div>
+        <h2 id="saved-letter-title">Your letter is ready!</h2>
         <p>
-            Your beautiful message is now safely stored in your letters.<br>
-            To give this letter to someone special, copy the link below.
+            Your beautiful message is tucked safely into your collection.
+            Copy this special link and send it to the person who should open it.
         </p>
 
+        <label class="url-label" for="letterUrl">Your shareable letter link</label>
         <div class="url-box">
             <input id="letterUrl" type="text" readonly>
             <button type="button" class="btn-copy"
             onclick="const i=document.getElementById('letterUrl');
                  i.select();
                  navigator.clipboard.writeText(i.value);">
-    Copy
-</button>
-
+                <span aria-hidden="true">📋</span> Copy link
+            </button>
         </div>
 
         <div class="actions">
-            <a href="/letters/get" class="action-btn btn-secondary">My Letters</a>
-            <a href="/create/letter" class="action-btn btn-primary">Create New Letter</a>
+            <a href="/letters/get" class="action-btn btn-secondary"><span aria-hidden="true">📚</span> My Letters</a>
+            <a href="/create/letter" class="action-btn btn-primary"><span aria-hidden="true">💌</span> Write another</a>
         </div>
     </div>
 </div>
-

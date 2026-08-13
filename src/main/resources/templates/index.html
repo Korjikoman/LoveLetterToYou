@@ -1,52 +1,42 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-    th:replace="~{layout :: layout (
-        title='Create Letter',
-        content = ~{::content},
-        styles = ~{},
-        scripts = ~{::scripts}
-    )}">
+      th:replace="~{layout :: layout (
+        title='Home',
+        content=~{::content},
+        styles=~{},
+        scripts=~{::scripts}
+      )}">
 
-<div th:fragment="content">
-
-    <div class="welcome-card"
-         style="display:flex;justify-content:center;align-items:center;
-                min-height:calc(100vh - 300px);">
-
-        <div style="
-            background:#fff;
-            max-width:750px;
-            padding:3rem;
-            border-radius:20px;
-            text-align:center;
-            box-shadow:0 12px 30px rgba(0,0,0,.15);
-        ">
-
-            <h1 style="
-                font-family:'Great Vibes', cursive;
-                font-size:3rem;
-                color:#C14B4B;
-                margin-bottom:1.5rem;
-            ">
-                Welcome
-            </h1>
-
-            <p style="
-                font-family:'Playfair Display', serif;
-                font-size:1.2rem;
-                line-height:1.8;
-            ">
-                This place was created for words that aren't correct to say out loud.
-                Real love prefers silence.
+<th:block th:fragment="content">
+    <section class="welcome-stage" aria-labelledby="welcome-title">
+        <div class="welcome-copy">
+            <p class="eyebrow">A tiny home for enormous feelings</p>
+            <h1 id="welcome-title">Words from the <em>heart</em></h1>
+            <p class="welcome-lead">
+                Some feelings are easier to write than to say. Wrap yours in a little
+                digital letter, keep it safe, and share it with someone special.
             </p>
-
+            <div class="welcome-actions">
+                <a class="storybook-button" th:href="@{/create/letter}">
+                    <span aria-hidden="true">✍️</span> Write a love letter
+                </a>
+                <a class="storybook-button secondary" th:href="@{/letters/get}">
+                    <span aria-hidden="true">💌</span> Visit my letters
+                </a>
+            </div>
         </div>
-    </div>
 
-</div>
+        <div class="welcome-illustration" aria-hidden="true">
+            <span class="doodle doodle-one">✨</span>
+            <span class="doodle doodle-two">🌸</span>
+            <span class="doodle doodle-three">💗</span>
+            <div class="mailbox">
+                <div class="mailbox-door">💌</div>
+                <div class="mailbox-flag"></div>
+            </div>
+        </div>
+    </section>
+</th:block>
 
-<div th:fragment="scripts">
-
-</div>
-
+<th:block th:fragment="scripts"></th:block>
 </html>

@@ -1,104 +1,99 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-    th:replace="~{layout :: layout (
+      th:replace="~{layout :: layout (
         title='Create Letter',
-        content = ~{::content},
-        styles = ~{::styles},
-        scripts = ~{::scripts}
-    )}">
+        content=~{::content},
+        styles=~{::styles},
+        scripts=~{::scripts}
+      )}">
 <head>
-    <div th:fragment="styles">
+    <th:block th:fragment="styles">
         <link rel="stylesheet" href="/css/create_letter.css">
-    </div>
-    <script src="/js/create-letter.js" defer></script>
-
-
+        <link rel="stylesheet" href="/css/modal_url.css">
+    </th:block>
 </head>
 
 <body>
-
-
-<main>
-    <div th:fragment="content">
+<th:block th:fragment="content">
+    <section class="letter-editor" aria-labelledby="create-letter-title">
         <div class="letter-card">
-            <h1>💌 Write Your Letter</h1>
-            
-            <form th:action="@{/create/letter}" method="POST">
+            <div class="editor-heading">
+                <span class="editor-heading-icon" aria-hidden="true">💌</span>
+                <h1 id="create-letter-title">Write your letter</h1>
+                <p>Turn a quiet feeling into something they can keep.</p>
+            </div>
+
+            <form class="letter-form" th:action="@{/create/letter}" method="POST">
                 <div class="form-group">
+                    <label class="form-label" for="letterTitle">A title for your note</label>
                     <input
                         type="text"
                         id="letterTitle"
                         name="title"
                         class="letter-title"
-                        placeholder="Letter title… 💗"
+                        placeholder="For the one who makes me smile…"
                         maxlength="120"
-                        required />
+                        autocomplete="off"
+                        required>
                 </div>
 
-
                 <div class="form-group">
-                    <textarea 
-                        id="letterContent" 
-                        name="content" 
+                    <label class="form-label" for="letterContent">
+                        Your heartfelt message
+                        <span class="label-note">— take all the space you need</span>
+                    </label>
+                    <textarea
+                        id="letterContent"
+                        name="content"
                         placeholder="My dearest love, 💕&#10;&#10;Today I want to tell you...&#10;&#10;With all my heart,"
                         required></textarea>
                 </div>
 
-                <div class="form-group slider-group">
-                    <label for="livingTime">Letter's living time: <span id="livingTimeValue">60</span> min</label>
-                    <input type="range" id="livingTime" name="livingTime" min="5" max="1440" value="60">
-                </div>
+                <div class="options-grid">
+                    <div class="form-group slider-group">
+                        <label for="livingTime">
+                            Keep this letter alive for
+                            <span class="time-readout"><span id="livingTimeValue">60</span>&nbsp;min</span>
+                        </label>
+                        <input type="range" id="livingTime" name="livingTime" min="5" max="1440" value="60">
+                    </div>
 
-
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="protectedLetter"> Protected Letter
-                    </label>
+                    <div class="form-group protection-panel">
+                        <label class="checkbox-label" for="protectedLetter">
+                            <input type="checkbox" id="protectedLetter" aria-controls="passwordContainer">
+                            <span>Lock with a secret code</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="form-group password-block" id="passwordContainer">
-                    <label>Enter 5-character password (letters + numbers)</label>
-                    <div id="passwordInputs">
-                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
-                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
-                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
-                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
-                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char">
+                    <label>Make a 5-character code <span class="label-note">letters + numbers</span></label>
+                    <div id="passwordInputs" aria-label="Five-character letter password">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char" aria-label="Password character 1">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char" aria-label="Password character 2">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char" aria-label="Password character 3">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char" aria-label="Password character 4">
+                        <input type="text" maxlength="1" pattern="[A-Za-z0-9]" class="password-char" aria-label="Password character 5">
                     </div>
-                    <button type="button" id="setPasswordButton">Set password</button>
+                    <button type="button" id="setPasswordButton">Seal this code <span aria-hidden="true">🔒</span></button>
                 </div>
-
-
             </form>
+
             <div class="btn-container">
                 <button type="button" id="createButtonSendLoveLetter" class="btn-small">
-                    <span>Share your Love Letter!</span>
+                    <span>Share your love letter</span><span aria-hidden="true">💝</span>
                 </button>
-                <button type="button" id="setPasswordButton" class="btn-small">
-                    <span>Set Password</span>
-                </button>
-                <button type="button" id="cancelButton" class="btn-small">
+                <a id="cancelButton" class="btn-small secondary" th:href="@{/index}">
                     <span>Cancel</span>
-                </button>
+                </a>
             </div>
-            <p style="
-                margin-top: 1.5rem;
-                font-size: 0.9rem;
-                color: #9370DB;
-                font-family: 'Robosto', sans-serif;
-                opacity: 0.8;
-                ">
-                ✨ Your words will be kept safe in our digital heart ✨
-            </p>
+
+            <p class="editor-note">✨ Your words will be kept safe in our little digital heart ✨</p>
         </div>
+    </section>
+</th:block>
 
-    </div>
-
-
-</main>
-
-</body>
-<div th:fragment="scripts">
+<th:block th:fragment="scripts">
     <script>
         
         let letterPassword = ""; // сюда сохраняем пароль после нажатия Set Password
@@ -202,6 +197,65 @@
         
 
     </script>
-    
-</div>
+    <script>
+        // Keeps the dynamically loaded share dialog comfortable for keyboard users.
+        function enableShareDialogKeyboardSupport() {
+            let returnFocusTarget = null;
+
+            function closeShareDialog() {
+                const dialog = document.querySelector('.modal-overlay');
+                if (!dialog) return;
+
+                dialog.remove();
+                document.body.classList.remove('modal-open');
+                returnFocusTarget?.focus();
+            }
+
+            function prepareShareDialog(dialog) {
+                if (dialog.dataset.keyboardReady === 'true') return;
+
+                dialog.dataset.keyboardReady = 'true';
+                returnFocusTarget = document.activeElement;
+                document.body.classList.add('modal-open');
+                dialog.querySelector('.modal-close')?.focus();
+            }
+
+            new MutationObserver(() => {
+                const dialog = document.querySelector('.modal-overlay');
+                if (dialog) prepareShareDialog(dialog);
+            }).observe(document.body, {childList: true});
+
+            document.addEventListener('click', event => {
+                if (event.target.closest('.modal-close')) closeShareDialog();
+            });
+
+            document.addEventListener('keydown', event => {
+                const dialog = document.querySelector('.modal-overlay');
+                if (!dialog) return;
+
+                if (event.key === 'Escape') {
+                    closeShareDialog();
+                    return;
+                }
+
+                if (event.key !== 'Tab') return;
+
+                const focusable = [...dialog.querySelectorAll('button, a[href], input:not([disabled])')];
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            });
+        }
+
+        enableShareDialogKeyboardSupport();
+    </script>
+</th:block>
+</body>
 </html>

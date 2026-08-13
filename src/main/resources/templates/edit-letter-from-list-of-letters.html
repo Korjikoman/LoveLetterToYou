@@ -1,95 +1,100 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout :: layout (
-          title='Edit Letter',
-          content = ~{::content},
-          styles = ~{::styles},
-          scripts = ~{::scripts}
+        title='Edit Letter',
+        content=~{::content},
+        styles=~{::styles},
+        scripts=~{::scripts}
       )}">
-
 <head>
-    <div th:fragment="styles">
+    <th:block th:fragment="styles">
         <link rel="stylesheet" href="/css/create_letter.css">
-    </div>
+    </th:block>
 </head>
 
 <body>
-<main>
-    <div th:fragment="content">
+<th:block th:fragment="content">
+    <section class="letter-editor" aria-labelledby="edit-letter-title">
         <div class="letter-card">
-            <h1>✏️ Edit Your Letter</h1>
-
-            <input type="hidden" id="publicToken" th:value="${letterPublicToken}"/>
-
-            <div class="form-group">
-                <input type="text"
-                       id="letterTitle"
-                       class="letter-title"
-                       th:value="${letterTitle}"
-                       maxlength="120"
-                       required/>
+            <div class="editor-heading">
+                <span class="editor-heading-icon" aria-hidden="true">✏️</span>
+                <h1 id="edit-letter-title">Polish your letter</h1>
+                <p>A tiny edit can make a heartfelt note feel just right.</p>
             </div>
 
-            <div class="form-group">
-                
-                <textarea id="letterContent"
-                          required
-                          th:utext="${letterText}"></textarea>
-            </div>
+            <input type="hidden" id="publicToken" th:value="${letterPublicToken}">
 
-            <div class="form-group slider-group">
-                <label>
-                    Letter's living time:
-                    <span id="livingTimeValue"
-                          th:text="${letterTTL}">60</span> min
-                </label>
-                <input type="range"
-                       id="livingTime"
-                       min="1"
-                       max="1440"
-                       th:value="${letterTTL}">
-            </div>
+            <div class="letter-form">
+                <div class="form-group">
+                    <label class="form-label" for="letterTitle">Letter title</label>
+                    <input type="text"
+                           id="letterTitle"
+                           class="letter-title"
+                           th:value="${letterTitle}"
+                           maxlength="120"
+                           required>
+                </div>
 
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox"
-                           id="protectedLetter"
-                           th:checked="${letterPassword != null}">
-                    Protected Letter
-                </label>
-            </div>
+                <div class="form-group">
+                    <label class="form-label" for="letterContent">Your message</label>
+                    <textarea id="letterContent"
+                              required
+                              th:text="${letterText}"></textarea>
+                </div>
 
-            <div class="form-group password-block"
-                 id="passwordContainer"
-                 th:style="${letterPassword != null} ? 'display:flex' : 'display:none'">
+                <div class="options-grid">
+                    <div class="form-group slider-group">
+                        <label for="livingTime">
+                            Keep this letter alive for
+                            <span class="time-readout"><span id="livingTimeValue" th:text="${letterTTL}">60</span>&nbsp;min</span>
+                        </label>
+                        <input type="range"
+                               id="livingTime"
+                               min="1"
+                               max="1440"
+                               th:value="${letterTTL}">
+                    </div>
 
-                <label>New password (5 chars)</label>
-                <div id="passwordInputs">
-                    <input class="password-char" maxlength="1">
-                    <input class="password-char" maxlength="1">
-                    <input class="password-char" maxlength="1">
-                    <input class="password-char" maxlength="1">
-                    <input class="password-char" maxlength="1">
+                    <div class="form-group protection-panel">
+                        <label class="checkbox-label" for="protectedLetter">
+                            <input type="checkbox"
+                                   id="protectedLetter"
+                                   aria-controls="passwordContainer"
+                                   th:checked="${letterPassword != null and !#strings.isEmpty(letterPassword)}">
+                            <span>Lock with a new code</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group password-block"
+                     id="passwordContainer"
+                     th:style="${letterPassword != null and !#strings.isEmpty(letterPassword)} ? 'display:flex' : 'display:none'">
+                    <label>New 5-character code <span class="label-note">letters + numbers</span></label>
+                    <div id="passwordInputs" aria-label="Five-character letter password">
+                        <input class="password-char" maxlength="1" aria-label="Password character 1">
+                        <input class="password-char" maxlength="1" aria-label="Password character 2">
+                        <input class="password-char" maxlength="1" aria-label="Password character 3">
+                        <input class="password-char" maxlength="1" aria-label="Password character 4">
+                        <input class="password-char" maxlength="1" aria-label="Password character 5">
+                    </div>
                 </div>
             </div>
 
             <div class="btn-container">
                 <button type="button" id="saveButton" class="btn-small">
-                    <span>Save changes</span>
+                    <span>Save changes</span><span aria-hidden="true">💾</span>
                 </button>
-                <a th:href="@{/letters/get}" class="btn-small">
+                <a th:href="@{/letters/get}" class="btn-small secondary">
                     <span>Cancel</span>
                 </a>
             </div>
 
-            <div id="messageContainer"></div>
-            
+            <div id="messageContainer" role="status" aria-live="polite"></div>
         </div>
-    </div>
-</main>
-</body>
+    </section>
+</th:block>
 
-<div th:fragment="scripts">
+<th:block th:fragment="scripts">
 <script>
     let letterTTL = Number(document.getElementById('livingTime').value);
     let letterPassword = null;
@@ -149,5 +154,6 @@
         setTimeout(() => c.innerHTML = '', 4000);
     }
 </script>
-</div>
+</th:block>
+</body>
 </html>

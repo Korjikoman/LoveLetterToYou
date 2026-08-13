@@ -1,43 +1,38 @@
-    <!DOCTYPE html>
-    <html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffd3e0">
+    <title>Something lovely for you · Romantic Letters</title>
+    <link rel="stylesheet" href="/css/watch_letter.css">
+</head>
+<body>
+    <a th:href="@{/index}" class="logo" aria-label="Romantic Letters home">
+        <span aria-hidden="true">💌</span> Romantic Letters
+    </a>
 
-    <head>
-        <meta charset="UTF-8">
-        <title>Romantic Letter</title>
-
-        <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="/css/watch_letter.css">
-        
-    </head>
-
-    <body>
-
-    <a th:href="@{/index}" class="logo">💌</a>
-
-    <div class="background-hearts">
-        <div class="heart" style="left:10%; animation-duration:14s;"></div>
-        <div class="heart" style="left:25%; animation-duration:18s;"></div>
-        <div class="heart" style="left:40%; animation-duration:16s;"></div>
-        <div class="heart" style="left:55%; animation-duration:20s;"></div>
-        <div class="heart" style="left:70%; animation-duration:15s;"></div>
-        <div class="heart" style="left:85%; animation-duration:19s;"></div>
+    <div class="background-hearts" aria-hidden="true">
+        <div class="heart" style="left:8%; animation-duration:18s;"></div>
+        <div class="heart" style="left:23%; animation-duration:22s; animation-delay:-9s;"></div>
+        <div class="heart" style="left:39%; animation-duration:20s; animation-delay:-14s;"></div>
+        <div class="heart" style="left:55%; animation-duration:24s; animation-delay:-6s;"></div>
+        <div class="heart" style="left:71%; animation-duration:19s; animation-delay:-12s;"></div>
+        <div class="heart" style="left:87%; animation-duration:23s; animation-delay:-17s;"></div>
     </div>
 
-    <div class="letter-container">
-
+    <main class="letter-container">
+        <p class="letter-intro">A little something arrived for you&nbsp; ✨</p>
         <div class="envelope">
-            <div class="envelope-back"></div>
-            <div class="envelope-flap"></div>
+            <div class="envelope-back" aria-hidden="true"></div>
+            <div class="envelope-flap" aria-hidden="true"></div>
 
-            <div class="letter-card">
-                <h2 th:text="${letterTitle}"></h2>
-                <p th:text="${letterText}"></p>
-                <div class="author" th:text="'— ' + ${authorEmail}"></div>
-            </div>
+            <article class="letter-card" aria-label="Your romantic letter">
+                <h2 th:text="${letterTitle}">A heartfelt letter</h2>
+                <p th:text="${letterText}">Your letter appears here.</p>
+                <div class="author" th:text="'— ' + ${authorEmail}">— With love</div>
+            </article>
         </div>
-
-    </div>
-
-
-    </body>
-    </html>
+    </main>
+</body>
+</html>

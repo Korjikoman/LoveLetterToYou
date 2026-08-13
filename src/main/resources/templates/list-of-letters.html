@@ -1,51 +1,72 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-    th:replace="~{layout :: layout (
-        title='MY letters',
-        content = ~{::content},
-        styles = ~{::styles},
-        scripts = ~{::scripts}
-    )}">
+      th:replace="~{layout :: layout (
+        title='My Letters',
+        content=~{::content},
+        styles=~{::styles},
+        scripts=~{::scripts}
+      )}">
 <head>
-    <div th:fragment="styles">
+    <th:block th:fragment="styles">
         <link rel="stylesheet" href="/css/list-of-letters.css">
-    </div>
+    </th:block>
 </head>
-<body>
-    <main>
-    <div th:fragment="content">
-        <div class="letters-container">
-            <h2>My Letters</h2>
-            <div id="messageContainer" th:if="${param.success}" class="alert alert-success" role="alert">
-                Letter was successfully updated!
-            </div>
-            <div th:if="${param.error}" class="alert alert-danger" role="alert">
-                Something went wrong. Please try again.
-            </div>
-            <div th:if="${#lists.isEmpty(letters)}">
-                <p>No letters yet. <a th:href="@{/create/letter}">Create one</a>.</p>
-            </div>
 
-            <div class="letter-card" th:each="letter : ${letters}" 
-                th:data-public-token="${letter.publicToken}">
+<body>
+<th:block th:fragment="content">
+    <section class="letters-container" aria-labelledby="letters-title">
+        <div class="letters-heading">
+            <div class="letters-heading-copy">
+                <p class="letters-kicker">Your little archive of feelings</p>
+                <h1 id="letters-title">My Letters</h1>
+                <p>Every note you have written, gathered in one cozy place.</p>
+            </div>
+            <a class="new-letter-link" th:href="@{/create/letter}">
+                <span aria-hidden="true">💖</span> New letter
+            </a>
+        </div>
+
+        <div id="messageContainer" th:if="${param.success}" class="alert alert-success" role="alert">
+            Letter was successfully updated! ✨
+        </div>
+        <div th:if="${param.error}" class="alert alert-danger" role="alert">
+            Something went wrong. Please try again.
+        </div>
+
+        <div class="empty-letters" th:if="${#lists.isEmpty(letters)}">
+            <div class="empty-icon" aria-hidden="true">📭</div>
+            <h2>Your mailbox is waiting</h2>
+            <p>No letters yet. Your first sweet note can begin with just one honest sentence.</p>
+            <a th:href="@{/create/letter}">Write the first one&nbsp; 💌</a>
+        </div>
+
+        <div class="letters-grid" th:unless="${#lists.isEmpty(letters)}">
+            <article class="letter-card"
+                     th:each="letter : ${letters}"
+                     th:data-public-token="${letter.publicToken}">
                 <div class="letter-header">
-                    <h4 th:text="${letter.title}">Letter Title</h4>
-                    <button class="btn btn-sm btn-outline-primary edit-btn">Edit</button>
-                    <button class="btn btn-sm btn-outline-danger delete-btn">Delete</button>
+                    <div class="letter-title-wrap">
+                        <span class="letter-stamp" aria-hidden="true">💌</span>
+                        <h2 th:text="${letter.title}">Letter Title</h2>
+                    </div>
+                    <div class="letter-actions" aria-label="Letter actions">
+                        <button type="button" class="letter-action edit-btn" aria-label="Edit letter">
+                            <span aria-hidden="true">✏️</span><span>Edit</span>
+                        </button>
+                        <button type="button" class="letter-action delete-btn" aria-label="Delete letter">
+                            <span aria-hidden="true">🗑️</span><span>Delete</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="letter-body">
-                    <p th:utext="${letter.text}">Letter text...</p>
+                    <p th:text="${letter.text}">Letter text...</p>
                 </div>
-            </div>
-
+            </article>
         </div>
-    </div>
-</main>
+    </section>
+</th:block>
 
-</body>
-
-
-<div th:fragment="scripts">
+<th:block th:fragment="scripts">
     <script>
         const editButtons = document.querySelectorAll('.edit-btn');
         const deleteButtons = document.querySelectorAll('.delete-btn');
@@ -99,6 +120,6 @@
 
 
     </script>
-    
-</div>
+</th:block>
+</body>
 </html>

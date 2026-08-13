@@ -1,6 +1,7 @@
 package com.example.myproject.Model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,8 +28,28 @@ public class Letter {
     private String title;
     private String text;
     
+    private ArrayList<String> imagesPaths;
+    private String letterFontName; 
+
     private String password;
     private Integer ttl;
+
+    public void setLetterFontName(String letterFontName){
+        this.letterFontName = letterFontName;
+    }
+
+    public String  getLetterFontName(){
+        return this.letterFontName;
+    }
+
+    public void setImagesPaths(ArrayList<String> imagesPaths){
+        this.imagesPaths = imagesPaths;
+    }
+
+    public ArrayList<String>  getImagesPaths(){
+        return this.imagesPaths;
+    }
+
 
     public void setUsername(String username){
         this.username = username;

@@ -1,123 +1,264 @@
-h2{
-    font-family:'Great Vibes', cursive;
-    text-align: center;
+.modal-open {
+    overflow: hidden;
 }
 
 .modal-overlay {
     position: fixed;
     inset: 0;
+    z-index: 9999;
+    padding: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: fadeIn 0.3s ease;
-    z-index: 9999;
+    overflow-y: auto;
+    background: rgba(75, 39, 59, .48);
+    backdrop-filter: blur(8px);
+    animation: modalFadeIn .25s ease both;
 }
 
-.modal-card {
-    background: #fff;
-    width: 100%;
-    max-width: 520px;
-    padding: 2.5rem;
-    border-radius: 18px;
+.modal-overlay .modal-card {
+    width: min(560px, 100%);
+    position: relative;
+    padding: clamp(1.5rem, 5vw, 3rem);
+    border: 3px solid var(--berry-dark, #702d50);
+    border-radius: 30px;
+    color: var(--ink, #4b273b);
+    background:
+        repeating-linear-gradient(0deg, transparent 0 31px, rgba(232,169,190,.15) 32px),
+        var(--paper, #fffdf8);
+    box-shadow: 0 9px 0 rgba(112,45,80,.18), 0 30px 80px rgba(40,20,31,.34);
     text-align: center;
-    border: 2px solid #FFE4E1;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-    animation: slideUp 0.35s ease;
+    animation: modalPopIn .38s cubic-bezier(.2,.9,.3,1.2) both;
 }
 
-.modal-card h2 {
-    font-family: 'Great Vibes', cursive;
-    font-size: 2.4rem;
-    color: #C14B4B;
-    margin-bottom: 0.5rem;
+.modal-overlay .modal-card::before,
+.modal-overlay .modal-card::after {
+    content: '';
+    position: absolute;
+    width: 86px;
+    height: 25px;
+    background: rgba(255,217,120,.78);
+    box-shadow: 0 2px 3px rgba(75,39,59,.16);
 }
 
-.modal-card p {
-    font-size: 0.95rem;
-    color: #6b4a4a;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-}
-
-.url-box {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.8rem;
-}
-
-.url-box input {
-    flex: 1;
-    padding: 0.7rem 0.9rem;
-    border-radius: 10px;
-    border: 2px solid #FFE4E1;
-    font-size: 0.85rem;
-    color: #8B0000;
-}
-
-.url-box input:focus {
-    outline: none;
-    border-color: #C14B4B;
-    box-shadow: 0 0 8px rgba(193, 75, 75, 0.2);
-}
-
-.btn-copy {
-    background: linear-gradient(135deg, #9370DB, #C14B4B);
-    border: none;
-    color: #fff;
-    padding: 0 1.2rem;
-    border-radius: 10px;
+.modal-overlay .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 4;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--berry-dark, #702d50);
+    border-radius: 50%;
+    color: var(--berry-dark, #702d50);
+    background: var(--cream, #fff4dc);
+    box-shadow: 0 3px 0 var(--berry-dark, #702d50);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1;
     cursor: pointer;
-    font-size: 0.85rem;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 12px rgba(147, 112, 219, 0.25);
+    transition: transform .2s cubic-bezier(.2,.9,.3,1.25), box-shadow .2s ease, background .2s ease;
 }
 
-.btn-copy:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(193, 75, 75, 0.3);
+.modal-overlay .modal-close:hover {
+    background: var(--sun, #ffd978);
+    transform: translateY(-2px) rotate(5deg);
 }
 
-.actions {
+.modal-overlay .modal-close:active {
+    box-shadow: 0 1px 0 var(--berry-dark, #702d50);
+    transform: translateY(2px);
+}
+
+.modal-overlay .modal-card::before {
+    top: -12px;
+    left: 8%;
+    transform: rotate(-5deg);
+}
+
+.modal-overlay .modal-card::after {
+    right: 8%;
+    bottom: -12px;
+    transform: rotate(4deg);
+}
+
+.modal-overlay .saved-stamp {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 1rem;
+    display: grid;
+    place-items: center;
+    border: 3px solid var(--berry-dark, #702d50);
+    border-radius: 23px;
+    background: var(--blush, #ffd3e0);
+    box-shadow: 0 5px 0 rgba(112,45,80,.15);
+    font-size: 2.25rem;
+    transform: rotate(-4deg);
+}
+
+.modal-overlay .modal-card h2 {
+    margin: 0;
+    color: var(--berry-dark, #702d50);
+    font-family: 'Fredoka', sans-serif;
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -.04em;
+}
+
+.modal-overlay .modal-card > p {
+    max-width: 44ch;
+    margin: .8rem auto 1.5rem;
+    color: var(--ink-soft, #755766);
+    font-size: .96rem;
+    font-weight: 600;
+    line-height: 1.65;
+}
+
+.modal-overlay .url-label {
+    margin: 0 0 .45rem;
+    display: block;
+    color: var(--ink, #4b273b);
+    font-size: .82rem;
+    font-weight: 900;
+    text-align: left;
+}
+
+.modal-overlay .url-box {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: .6rem;
+}
+
+.modal-overlay .url-box input {
+    min-width: 0;
+    min-height: 48px;
+    padding: .7rem .9rem;
+    flex: 1;
+    border: 2px solid rgba(112,45,80,.55);
+    border-radius: 15px;
+    outline: none;
+    color: var(--berry-dark, #702d50);
+    background: rgba(255,255,255,.92);
+    box-shadow: inset 0 -3px 0 rgba(232,169,190,.13);
+    font-size: .86rem;
+    font-weight: 700;
+}
+
+.modal-overlay .url-box input:focus {
+    border-color: var(--berry-dark, #702d50);
+    box-shadow: 0 0 0 4px rgba(255,217,120,.55);
+}
+
+.modal-overlay .btn-copy {
+    min-height: 48px;
+    padding: .7rem 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    border: 2px solid var(--berry-dark, #702d50);
+    border-radius: 15px;
+    color: var(--berry-dark, #702d50);
+    background: var(--mint, #cfebdd);
+    box-shadow: 0 4px 0 var(--berry-dark, #702d50);
+    font-size: .88rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform .2s cubic-bezier(.2,.9,.3,1.25), box-shadow .2s ease, background .2s ease;
+}
+
+.modal-overlay .btn-copy:hover {
+    background: #b9dfce;
+    transform: translateY(-2px);
+}
+
+.modal-overlay .btn-copy:active {
+    box-shadow: 0 1px 0 var(--berry-dark, #702d50);
+    transform: translateY(3px);
+}
+
+.modal-overlay .actions {
     display: flex;
     justify-content: center;
-    gap: 1rem;
+    gap: .75rem;
     flex-wrap: wrap;
 }
 
-.action-btn {
+.modal-overlay .action-btn {
+    min-height: 47px;
+    padding: .72rem 1.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    border: 2px solid var(--berry-dark, #702d50);
+    border-radius: 999px;
+    font-size: .9rem;
+    font-weight: 900;
     text-decoration: none;
-    padding: 0.9rem 1.8rem;
-    border-radius: 25px;
-    font-size: 0.9rem;
-    font-family: 'Playfair Display', serif;
-    font-weight: 600;
-    transition: all 0.25s ease;
-    border: 2px solid whitesmoke;
+    transition: transform .2s cubic-bezier(.2,.9,.3,1.25), box-shadow .2s ease, background .2s ease;
 }
 
-.btn-primary {
-    background: linear-gradient(140deg, #9370DB, #C14B4B);
+.modal-overlay .action-btn.btn-primary {
     color: #fff;
-    
+    background: var(--berry, #a83d68);
+    box-shadow: 0 4px 0 var(--berry-dark, #702d50);
 }
 
-.btn-secondary {
-    background: #fff;
-    color: #C14B4B;
-    border-color: #FFE4E1;
+.modal-overlay .action-btn.btn-secondary {
+    color: var(--berry-dark, #702d50);
+    background: var(--cream, #fff4dc);
+    box-shadow: 0 4px 0 var(--berry-dark, #702d50);
 }
 
-.action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(193, 75, 75, 0.25);
+.modal-overlay .action-btn:hover {
+    transform: translateY(-2px) rotate(-.5deg);
 }
 
-@keyframes fadeIn {
+.modal-overlay .action-btn.btn-primary:hover {
+    color: #fff;
+    background: var(--berry-dark, #702d50);
+}
+
+.modal-overlay .action-btn.btn-secondary:hover {
+    color: var(--berry-dark, #702d50);
+    background: var(--sun, #ffd978);
+}
+
+@keyframes modalFadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
-@keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+@keyframes modalPopIn {
+    from { opacity: 0; transform: translateY(24px) scale(.94) rotate(-1deg); }
+    to { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+
+@media (max-width: 520px) {
+    .modal-overlay {
+        align-items: flex-start;
+        padding: 2rem .65rem;
+    }
+
+    .modal-overlay .url-box {
+        flex-direction: column;
+    }
+
+    .modal-overlay .actions,
+    .modal-overlay .action-btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-overlay,
+    .modal-overlay .modal-card {
+        animation-duration: .01ms !important;
+    }
 }

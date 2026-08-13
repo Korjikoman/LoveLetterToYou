@@ -1,280 +1,91 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:fragment="layout(title, content)">
+      th:fragment="layout(title, content, styles, scripts)">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffd3e0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    <title th:text="'Romantic Letters'">
-        Romantic Letters
-    </title>
+    <title th:text="${title} + ' · Romantic Letters'">Romantic Letters</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Great+Vibes&amp;family=Nunito:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/theme.css">
 
-    <style>
-        :root {
-            --red-main: #C14B4B;
-            --red-dark: #8B0000;
-            --pink-light: #FFE4E1;
-            --pink-soft: #FFDAB9;
-            --purple: #9370DB;
-            --shadow: rgba(0, 0, 0, 0.15);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            font-family: 'Roboto', sans-serif;
-            color: var(--red-dark);
-            background: linear-gradient(to bottom, var(--pink-light), var(--pink-soft));
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        .background-hearts {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .heart {
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background: var(--red-main);
-            transform: rotate(45deg);
-            opacity: 0.25;
-            animation: floatUp linear infinite;
-        }
-
-        .heart::before,
-        .heart::after {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background: var(--red-main);
-            border-radius: 50%;
-        }
-
-        .heart::before {
-            top: -9px;
-            left: 0;
-        }
-
-        .heart::after {
-            left: -9px;
-            top: 0;
-        }
-
-        @keyframes floatUp {
-            from {
-                transform: translateY(110vh) rotate(45deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.25;
-            }
-            to {
-                transform: translateY(-120vh) rotate(45deg);
-                opacity: 0;
-            }
-        }
-
-        header {
-            position: relative;
-            z-index: 2;
-            background: var(--pink-soft);
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 10px var(--shadow);
-        }
-
-        .logo {
-            font-family: 'Great Vibes', cursive;
-            font-size: 2.6rem;
-            color: var(--red-main);
-            text-decoration: none;
-        }
-
-        .status {
-            font-size: 0.95rem;
-            text-align: right;
-        }
-
-        nav {
-            position: relative;
-            z-index: 2;
-            background: linear-gradient(to right, var(--purple), var(--red-main));
-            padding: 1rem 0;
-        }
-
-        nav ul {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            gap: 2.5rem;
-        }
-
-        nav a,
-        nav .logout-button {
-            text-decoration: none;
-            color: #fff;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            transition: background 0.25s, transform 0.25s;
-        }
-
-        nav .logout-form {
-            margin: 0;
-        }
-
-        nav .logout-button {
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-        }
-
-        nav a:hover,
-        nav .logout-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        main {
-            flex: 1;
-            position: relative;
-            z-index: 2;
-            padding: 3rem 1rem;
-        }
-
-        footer {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            padding: 1.5rem 0;
-            font-size: 0.9rem;
-            background: #f5f5f5;
-            border-top: 1px solid var(--pink-light);
-        }
-
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            nav ul {
-                flex-direction: column;
-                gap: 1rem;
-            }
-        }
-        #createLetter {
-            position: relative;
-            background: linear-gradient(
-                270deg,
-                #ff6a88,
-                #ff99ac,
-                #c471ed,
-                #ff6a88
-            );
-            background-size: 600% 600%;
-            animation: gradientFlow 6s ease infinite;
-
-            color: #fff !important;
-            font-weight: 500;
-            box-shadow: 0 0 12px rgba(255, 105, 180, 0.6);
-        }
-        @keyframes gradientFlow {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-        #createLetter:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 105, 180, 0.9);
-        }
-
-
-    </style>
     <script src="/js/csrf.js"></script>
     <th:block th:replace="${styles} ?: ~{}"></th:block>
-
-    
 </head>
 
 <body>
+<a class="skip-link" href="#main-content">Skip to the lovely stuff</a>
 
-<div class="background-hearts">
-    <div class="heart" style="left:10%; animation-duration:14s;"></div>
-    <div class="heart" style="left:20%; animation-duration:18s;"></div>
-    <div class="heart" style="left:30%; animation-duration:16s;"></div>
-    <div class="heart" style="left:45%; animation-duration:20s;"></div>
-    <div class="heart" style="left:55%; animation-duration:15s;"></div>
-    <div class="heart" style="left:65%; animation-duration:19s;"></div>
-    <div class="heart" style="left:75%; animation-duration:17s;"></div>
-    <div class="heart" style="left:85%; animation-duration:21s;"></div>
+<div class="background-hearts" aria-hidden="true">
+    <div class="heart" style="left:8%; animation-duration:18s;"></div>
+    <div class="heart" style="left:19%; animation-duration:23s; animation-delay:-8s;"></div>
+    <div class="heart" style="left:31%; animation-duration:20s; animation-delay:-14s;"></div>
+    <div class="heart" style="left:44%; animation-duration:25s; animation-delay:-5s;"></div>
+    <div class="heart" style="left:57%; animation-duration:19s; animation-delay:-11s;"></div>
+    <div class="heart" style="left:69%; animation-duration:24s; animation-delay:-17s;"></div>
+    <div class="heart" style="left:81%; animation-duration:21s; animation-delay:-6s;"></div>
+    <div class="heart" style="left:92%; animation-duration:26s; animation-delay:-19s;"></div>
 </div>
 
-<header>
-    <a th:href="@{/index}" class="logo">Romantic Letters</a>
-    <p id="usernameP">
-    </p>
-    <div class="status">
-        <!-- <div>Logged as: <strong th:text="${user.email}"></strong></div> -->
-        <div>Online users: <strong id="usersOnlineCounter"></strong></div>
-        <div>Writed love letters: <strong id="usersWritingLetterCounter"></strong></div>
+<header class="site-header">
+    <div class="brand-cluster">
+        <a th:href="@{/index}" class="logo" aria-label="Romantic Letters home">
+            <span class="logo-mark" aria-hidden="true">💌</span>
+            <span>
+                <span class="logo-text">Romantic Letters</span>
+                <span id="usernameP" class="greeting" aria-live="polite">Welcome, daydreamer!</span>
+            </span>
+        </a>
+    </div>
+
+    <div class="status" aria-label="Live community activity">
+        <div class="status-chip">
+            <span class="status-icon" aria-hidden="true">🌷</span>
+            <span>Hearts online</span>
+            <strong id="usersOnlineCounter" aria-live="polite">—</strong>
+        </div>
+        <div class="status-chip">
+            <span class="status-icon" aria-hidden="true">✏️</span>
+            <span>Letters in bloom</span>
+            <strong id="usersWritingLetterCounter" aria-live="polite">—</strong>
+        </div>
     </div>
 </header>
 
-<nav>
+<nav class="site-nav" aria-label="Main navigation">
     <ul>
-        <li><a th:href="@{/letters/get}">My Letters</a></li>
-        <li><a id="createLetter" th:href="@{/create/letter}">Create Letter</a></li>
-        <li><a th:href="@{/profile/get}">My Profile</a></li>
+        <li><a th:href="@{/letters/get}"><span aria-hidden="true">📚</span> My Letters</a></li>
+        <li><a id="createLetter" th:href="@{/create/letter}"><span aria-hidden="true">💖</span> Create Letter</a></li>
+        <li><a th:href="@{/profile/get}"><span aria-hidden="true">🌼</span> My Profile</a></li>
         <li>
             <form class="logout-form" th:action="@{/logout}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                <button class="logout-button" type="submit">Logout</button>
+                <button class="logout-button" type="submit"><span aria-hidden="true">👋</span> Logout</button>
             </form>
         </li>
     </ul>
 </nav>
 
-
-<main>
-    <!-- СЮДА ПОДСТАВЛЯЕТСЯ КОНТЕНТ -->
-    <th:block  th:replace="${content} ?: ~{}"></th:block>
+<main id="main-content" class="site-main">
+    <th:block th:replace="${content} ?: ~{}"></th:block>
 </main>
- <div id="toast" class="toast"></div>
-<footer>
-    © Romantic Letter Service
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<footer class="site-footer">
+    <span><span aria-hidden="true">💗</span> Made for words worth keeping</span>
 </footer>
-    
-</body>
+
 <th:block th:replace="${scripts}"> </th:block>
 <script>
     ws = new WebSocket("ws://"+ location.host+"/ws");
@@ -297,4 +108,5 @@
         csrfFetch("/api/user/user-is-online", {method: "POST"});
     }, 59000);
 </script>
+</body>
 </html>
