@@ -11,10 +11,6 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import com.example.myproject.Interface.MessagePublisher;
-import com.example.myproject.Services.MessagePublisherImpl;
-import com.example.myproject.Services.MessageSubscriber;
-
 
 
 @Configuration
@@ -48,15 +44,5 @@ public class RedisConfiguration{
     @Bean
     public ChannelTopic topic(){
         return new ChannelTopic("channel_0");
-    }
-
-    @Bean
-    MessagePublisher redisPublisher() {
-        return new MessagePublisherImpl(redisTemplate(), topic());
-    }
-
-    @Bean
-    MessageListenerAdapter messageListener(){
-        return new MessageListenerAdapter( new MessageSubscriber());
     }
 }

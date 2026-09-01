@@ -9,8 +9,7 @@ import com.example.myproject.Model.MyAppUser;
 
 @Repository
 public interface MyAppUserRepository  extends JpaRepository<MyAppUser, Long>{
-    Optional<MyAppUser> findByUsername(String email);
+    Optional<MyAppUser> findByUsername(String username);
 
     Optional<MyAppUser> findByEmail(String email);
 }
-

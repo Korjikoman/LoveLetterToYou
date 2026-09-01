@@ -1,4 +1,4 @@
-package com.example.myproject.Repositories;
+package com.example.myproject.DTO;
 
 public enum DeleteResult {
     NOT_FOUND,

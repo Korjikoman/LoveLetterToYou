@@ -1,22 +1,38 @@
 package com.example.myproject.Repositories;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.server.ResponseStatusException;
 
+import com.example.myproject.DTO.CachedWrite;
+import com.example.myproject.DTO.FontData;
+import com.example.myproject.Model.CachedLetter;
+import com.example.myproject.Model.FontSettings;
 import com.example.myproject.Model.Letter;
-import com.example.myproject.Model.MyAppUser;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Repository
 public class RedisRepositoryImpl implements RedisRepository {
@@ -24,8 +40,8 @@ public class RedisRepositoryImpl implements RedisRepository {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final HashOperations<String, String, Object> hashOperations;
-
-
+    private final ObjectMapper objectMapper;
+    private static final Logger log = LoggerFactory.getLogger(RedisRepositoryImpl.class);
 
     private final int TIME_TO_LIVE_USER_ONLINE = 5; 
     private final int TIME_TO_LIVE_USER_WRITING_LETTER = 5; // in secs
@@ -33,158 +49,37 @@ public class RedisRepositoryImpl implements RedisRepository {
     private static final String COUNT_ONLINE_USERS = "online_users";
     private static final String COUNT_WRITING_LETTER_USERS = "writing_letter_users";
 
-    public RedisRepositoryImpl(RedisTemplate<String, Object> template){
+    public RedisRepositoryImpl(RedisTemplate<String, Object> template, ObjectMapper objectMapper){
         this.redisTemplate = template;
         this.hashOperations = template.opsForHash();
+        this.objectMapper = objectMapper;
     }
 
-    public EditResult updateLetter(Letter letter) {
-        RedisScript<Long> UPDATE_LETTER_SCRIPT = RedisScript.of(
-            """
-            
-            local owner = redis.call('HGET', KEYS[1], 'email')
-            
-            if not owner then
-                return 0
-            end
-
-            if (owner ~= ARGV[1]) then
-                return -1
-            end
-            
-            redis.call(
-                'HSET', KEYS[1], 'title', ARGV[2], 'text', ARGV[3]
-            )
-
-            if ARGV[4] == '1' then
-                redis.call('HSET', KEYS[1], 'password', ARGV[5])
-            end
-
-            redis.call('EXPIRE', KEYS[1], ARGV[6])
-
-            return 1
-
-            """, Long.class
-        );
-
-        long ttlSeconds = Math.multiplyExact((long)letter.getTTL(), 60L);
-        boolean changePassword = letter.getPassword() != null;
-        Long result = redisTemplate.execute(
-            UPDATE_LETTER_SCRIPT,
-            List.of(letter.getPublicToken()),
-            letter.getAuthorEmail(),
-            letter.getTitle(),
-            letter.getText(),
-            changePassword ? "1" : "0",
-            letter.getPassword() == null ? "" : letter.getPassword(),
-            Long.toString(ttlSeconds)
-
-        );
-
-        if (result == null){
-            throw new IllegalStateException("Redis hasn't returned anything");
-        }
-        if (result.intValue() == 1) {
-            return EditResult.UPDATED;
-        }else if (result.intValue() == 0) {
-            return EditResult.NOT_FOUND;
-        }else if (result.intValue() == -1) {
-            return EditResult.FORBIDDEN;
-        }
-        return EditResult.INVALID;
-    }
 
     @Override
-    public boolean add(Letter letter){
-
-        // Добавляем письмо по ключу -- PUBLIC TOKEN  + 
-        // Добавляем public token в список писем, написанных юзером, 
-        // чтобы потом их все (оставшиеся в живых) 
-        // можно было получать
-        String public_token = letter.getPublicToken();
-        
-        String script = """
-                redis.call('HSET', KEYS[1], 'text', ARGV[1])
-                redis.call('HSET', KEYS[1], 'title', ARGV[2])
-                redis.call('HSET', KEYS[1], 'email', ARGV[3])
-                redis.call('HSET', KEYS[1], 'username', ARGV[4])
-                redis.call('HSET', KEYS[1], 'password', ARGV[5])
-                redis.call('SADD', KEYS[2],  ARGV[6])
-                redis.call('EXPIRE', KEYS[1], ARGV[7])
-                return 1
-        """;
-
-
-
-        RedisScript<Long> redisScript = RedisScript.of(script, Long.class);
-        
-        String email = letter.getAuthorEmail();
-
-        redisTemplate.execute(
-            redisScript,
-            List.of(public_token, email),
-            letter.getText(),
-            letter.getTitle(),
-            email,
-            letter.getUsername(),
-            letter.getPassword(),
-            public_token,
-            String.valueOf(letter.getTTL() * 60) // TTL в минутах
-        );
-
-        return true;
-    }
-
-    @Override
-    public Letter findLetter(String publicToken){
-        Map<String, Object> data = hashOperations.entries(publicToken);
-        Long ttlSeconds = redisTemplate.getExpire(publicToken, TimeUnit.SECONDS);
-        Letter letter = new Letter();
-
-        if (ttlSeconds == null || ttlSeconds  <= -2 || data.isEmpty()) {
-            return null;
+    public Boolean evictLetter(String publicToken, String email){
+        if (publicToken == null || email == null) {
+            return false;
         }
+        String key = "cache:letter:" + publicToken;
 
-        if (data.isEmpty()){
-            return null;
-        }
-
-        letter.setPublicToken(publicToken);
-        letter.setText((String) data.get("text"));
-        letter.setTitle((String) data.get("title"));
-        letter.setPassword((String) data.get("password"));
-
-        if (ttlSeconds >= 0 ) {
-            long ttlMinutes = (ttlSeconds + 59) / 60;
-            letter.setTTL(Math.toIntExact(ttlMinutes));
-        } else {
-            // -1 значит, что ключ существует без ограничения времени
-            letter.setTTL(null);
-        }
-
-
-        letter.setAuthorEmail((String) data.get("email"));
-        letter.setUsername((String) data.get("username"));
-
-        return letter;
-    }
-
-    @Override
-    public DeleteResult delete(String token, String email){
 
         RedisScript<Long> DELETE_LETTER_SCRIPT = RedisScript.of(
             """
             
-            local owner = redis.call('HGET', KEYS[1], 'email')
+            local value = redis.call('GET', KEYS[1])
             
-            if not owner then
+            if not value then
                 return 0
             end
+            local data = cjson.decode(value)
 
-            if (owner ~= ARGV[1]) then
-                return -1
+            local owner = data.authorEmail;
+
+            if not owner then
+                return -1;
             end
-
+            
             redis.call('DEL', KEYS[1])
             redis.call('SREM', KEYS[2], KEYS[1])
 
@@ -195,21 +90,18 @@ public class RedisRepositoryImpl implements RedisRepository {
 
         Long result = redisTemplate.execute(
             DELETE_LETTER_SCRIPT,
-            List.of(token, email),
+            List.of(key, email),
             email
         );
 
         if (result == null){
-            throw new IllegalStateException("Redis hasn't returned anything");
+            return false;
         }
         if (result.intValue() == 1) {
-            return DeleteResult.DELETED;
-        }else if (result.intValue() == 0) {
-            return DeleteResult.NOT_FOUND;
-        }else if (result.intValue() == -1) {
-            return DeleteResult.FORBIDDEN;
+            return true;
         }
-        return DeleteResult.INVALID;
+        
+        return false;
     }
 
 
@@ -351,66 +243,195 @@ public class RedisRepositoryImpl implements RedisRepository {
     return result;
 }
 
+
+
     @Override
-    public List<Letter> getAllLetters(String email) {
-        if (email == null || email.isEmpty() ){
-            return List.of();
-        }
+    public void putLetters(List<CachedWrite> cachedWrites) {
 
-        if (!Boolean.TRUE.equals(redisTemplate.hasKey(email))){
-            return List.of();
-        }
+        List<String> keys = new ArrayList<>();
+        List<Object> args = new ArrayList<>();
 
-        List<Letter> listOfLetters = new ArrayList<Letter>();
-        Set<Object> objects = redisTemplate.opsForSet().members(email);
+        RedisScript<Long> redisScript = RedisScript.of(
+            """
+                for i = 1, #KEYS do
+                    local json = ARGV[(i - 1) * 2 + 1]
+                    local ttl = ARGV[(i - 1) * 2 + 2]
+                    if ttl <= 0 do
+                        goto continue
+                    end
+                    
+                    redis.call('SET', KEYS[i], json, 'EX', ttl)
 
-        if (objects == null || objects.isEmpty()){
-            return List.of();
-        }
+                    ::continue::
+                end
+            """, Long.class
+        );
 
-        Set<String> publicTokens = new HashSet<String>();
+        for (CachedWrite write : cachedWrites) {
+            CachedLetter cached = write.cachedLetter();
 
-        // Преобразуем из Object в String
-        for (Object obj : objects){
-            if (obj != null){
-                publicTokens.add(obj.toString());
+            if (cached == null || cached.publicToken() == null || ) {
+                continue;
             }
+
+            Duration ttl = write.ttl();
+
+            if (ttl.isNegative() || ttl.isZero() || ttl == null) {
+                continue;
+            }
+
+            try {
+                String json = objectMapper.writeValueAsString(cached);
+                keys.add("cache:letter" + cached.publicToken());
+                args.add(json);
+                args.add(String.valueOf(ttl.getSeconds()));
+            } catch (JSONException e) {
+                throw new IllegalStateException("Cannot serialize CachedLetter", e);
+            }
+
         }
 
+        if (keys.isEmpty()) return;
+
+        redisTemplate.execute(redisScript, keys, args);
+    }
+
+    @Override
+    public Map<String, CachedLetter> getLettersByTokens(List<String> tokens) {
+        if (tokens == null || tokens.isEmpty() ){
+            return Map.of();
+        }
+
+    
+        RedisScript<String> script = RedisScript.of("""
+                keys = redis.call('HVALS', KEYS[1])
+
+                local result = {}
+                for i = 1, #keys do 
+                    local key = keys[i]
+                    local value = redis.call('GET', key)
+
+                    if value then
+                        result[key] = cjson.decode(value)
+                    end
+                end
+
+                return cjison.encode(result)
+
+                """, String.class);
         
 
-        for (String publicToken : publicTokens){
-            if (Boolean.TRUE.equals(redisTemplate.hasKey(publicToken))){
+        String json = redisTemplate.execute(script,tokens);
 
-                Map<String, Object> data = hashOperations.entries(publicToken);
 
-                String authorEmail =  data.get("email").toString();
+        Map<String, CachedLetter> cachedLetters = objectMapper.readValue(json, new TypeReference<Map<String, CachedLetter>>() {});
 
-                if (authorEmail == null || !email.equalsIgnoreCase(authorEmail)) {
-                    redisTemplate.opsForSet().remove(email, publicToken);
-                    continue;
-                }
-
-                Letter letter = new Letter();
-                letter.setText(data.get("text").toString());
-                letter.setTitle(data.get("title").toString());
-                letter.setAuthorEmail(data.get("email").toString());
-                letter.setPassword(data.get("password").toString());
-                letter.setPublicToken(publicToken);
-                
-
-                
-                listOfLetters.add(letter);
-
-            }
-            else{
-                redisTemplate.opsForSet().remove(email, publicToken);
-            }
-        }
-
-        return listOfLetters;
+        return cachedLetters;
 
     }
-  
-  
+    private Boolean checkNewVersion(String token, Long currentVersion) {
+        String json = redisTemplate.opsForValue().get("cache:letter" + token).toString();
+        if (json == null) {
+            return true;
+        }
+        CachedLetter letter = objectMapper.readValue(json, CachedLetter.class);
+        return currentVersion > letter.version();
+    }
+    @Override
+    public Long putLetter(CachedLetter letter, Duration ttl) {
+        if (letter == null || letter.publicToken() == null ||
+            letter.authorEmail() == null ||letter.text() == null) {
+            return 0L;
+        }
+
+
+        String  key = "cache:letter:" + letter.publicToken();
+
+        if (ttl == null || ttl.isNegative() || ttl.isZero()) {
+            return 0L;
+        }
+        
+        try {
+            String json = objectMapper.writeValueAsString(letter);
+            if (checkNewVersion(letter.publicToken(), letter.version())) {
+                redisTemplate.opsForValue().set(key, json, ttl);
+                return 1L;
+            } 
+            return 0L;
+        }catch (JSONException e) {
+            throw new IllegalStateException("Failed to serialize CachedLetter", e);
+        }
+    }
+
+    @Override
+    public Optional<CachedLetter> findLetter(String publicToken) {
+        String  key = "cache:letter:" + publicToken;
+
+        String json = redisTemplate.opsForValue().get(key).toString();
+        if (json == null) {
+            return Optional.empty();
+        }
+        Long ttlSeconds = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+
+        if (ttlSeconds == null || ttlSeconds  <= -2) {
+            return Optional.empty();
+        }
+        try {
+            CachedLetter letter = objectMapper.readValue(json, CachedLetter.class);
+            return Optional.of(letter);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to deserialize CachedLetter", e);
+        }
+    }
+
+
+    public Boolean putToken(String email, String new_token) {
+        if (email == null || email.isBlank() || new_token == null || new_token.isBlank()) {
+            return false;
+        }
+        
+        String key = "cache:user:" + email;
+        Long added = redisTemplate.opsForSet().add(key, new_token);
+        return Long.valueOf(1L).equals(added);
+    }
+
+    public Set<String> getTokens(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+
+        String key = "cache:user:" + email;
+        Set<Object> tokenSet = redisTemplate.opsForSet().members(key);
+        if (tokenSet == null || tokenSet.isEmpty()) {
+            return Set.of();
+        }
+
+        return tokenSet.stream().filter(Objects::nonNull).map(Object::toString).collect(Collectors.toSet());
+
+    }
+
+    public Long getTokensLength(String email) {
+        if (email == null || email.isBlank()) {
+            return 0L;
+        }
+
+        String key = "cache:user:" + email;
+        Long tokenSize = redisTemplate.opsForSet().size(key);
+    
+        return tokenSize;
+
+    }
+
+    public Boolean deleteToken(String email, String token) {
+        if (email == null || email.isBlank() || token == null || token.isBlank()) {
+            return false;
+        }
+
+        String key = "cache:user:" + email;
+        Long deleted = redisTemplate.opsForSet().remove(key, token);
+
+        return Long.valueOf(1L).equals(deleted);
+
+    }
+
 }

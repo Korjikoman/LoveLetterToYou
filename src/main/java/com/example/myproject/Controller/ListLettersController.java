@@ -1,39 +1,30 @@
 package com.example.myproject.Controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-import com.example.myproject.Repositories.DeleteResult;
-import com.example.myproject.Repositories.EditResult;
-import com.example.myproject.Repositories.MyAppUserRepository;
-import com.example.myproject.Repositories.RedisRepository;
 import com.example.myproject.Services.LetterService;
 
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.ui.Model;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
-import com.example.myproject.DTO.EditLetterRequest;
-import com.example.myproject.Model.Letter;
-import com.example.myproject.Model.MyAppUser;
+import com.example.myproject.DTO.DeleteResult;
+import com.example.myproject.DTO.EditResult;
+import com.example.myproject.DTO.LetterPage;
+import com.example.myproject.DTO.LetterView;
+import com.example.myproject.DTO.UpdateLetterData;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 
 
 @Controller
@@ -41,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 public class ListLettersController {
 
     private LetterService letterService;
+    private static final int PAGE_SIZE = 10;
 
     public ListLettersController(LetterService letterService) {
         this.letterService = letterService;
@@ -48,15 +40,11 @@ public class ListLettersController {
     }
 
     @GetMapping("/get")
-    public String getListOfLetters(Authentication auth, Model model) {
+    public ResponseEntity<LetterPage> getListOfLetters(Authentication auth, @RequestParam(required = false) Long beforeId) {
         String email = auth.getName();
+        LetterPage letters = letterService.getLetters(email, beforeId, PAGE_SIZE);
 
-        List<Letter> letters = new ArrayList<Letter>();
-
-        letters = letterService.getLetters(email);
-        
-        model.addAttribute("letters", letters);
-        return "list-of-letters";
+        return ResponseEntity.ok(letters);
     }
 
     @PostMapping("/delete")
@@ -67,7 +55,7 @@ public class ListLettersController {
         
         return switch (res) {
             case DELETED ->
-                    ResponseEntity.ok().build();
+                    ResponseEntity.ok().body("Письмо удалено!");
 
             case INVALID ->
                     ResponseEntity.badRequest()
@@ -92,16 +80,18 @@ public class ListLettersController {
             Model model,Authentication auth) {
         String email = auth.getName();
         
-        Letter letter = letterService.getLetter(publicToken, email);
+        LetterView letter = letterService.getLetter(publicToken, email).orElse(null);
 
         if (letter == null) {
             return "redirect:/letters/get?error=notfound";
         }
-        model.addAttribute("letterTitle", letter.getTitle());
-        model.addAttribute("letterText", letter.getText()); // XSS entry point
-        model.addAttribute("letterTTL", letter.getTTL());
-        model.addAttribute("letterPassword", letter.getPassword());
-        model.addAttribute("letterPublicToken", letter.getPublicToken());
+        model.addAttribute("letterTitle", letter.title());
+        model.addAttribute("letterText", letter.text());
+        model.addAttribute("images", letter.imagesPaths());
+        model.addAttribute("reactions", letter.reactions());
+        model.addAttribute("letterexpiresAt", letter.expiresAt());
+        model.addAttribute("letterPasswordProtected", letter.passwordProtected());
+        model.addAttribute("letterPublicToken", letter.publicToken());
 
         // НИЧЕГО не передаем про Redis
         model.addAttribute("redis-data", null);
@@ -122,16 +112,16 @@ public class ListLettersController {
     
 // !!!
     @PostMapping("/edit")
-    public ResponseEntity<?>  editLetterFromListOfLettersPOST(@RequestParam String publicToken, @Valid @RequestBody EditLetterRequest body, Authentication auth) {
+    public ResponseEntity<?>  editLetterFromListOfLettersPOST(@RequestParam String publicToken, @Valid @RequestBody UpdateLetterData body, Authentication auth) {
         
         String email = auth.getName();
 
-        EditResult letter_is_set = letterService.setLetter(publicToken, email, body.title(), body.text(), body.password(), body.ttl());
+        EditResult letter_is_set = letterService.updateLetter(publicToken, email, body);
 
        
         return switch (letter_is_set) {
             case UPDATED ->
-                    ResponseEntity.noContent().build();
+                    ResponseEntity.ok().body("Письмо отредактировано");
 
             case INVALID ->
                     ResponseEntity.badRequest()
@@ -141,7 +131,7 @@ public class ListLettersController {
                     ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .body(Map.of(
                                     "error",
-                                    "Письмо не найдено или у вас нет доступа"
+                                    "Письмо не найдено"
                             ));
             case FORBIDDEN ->
                     ResponseEntity.status(HttpStatus.FORBIDDEN)
