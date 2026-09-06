@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.myproject.Model.MyAppUser;
 import com.example.myproject.Repositories.MyAppUserRepository;
-import com.example.myproject.Services.EmailService;
 import com.example.myproject.Services.MyAppUserService;
 import com.example.myproject.Utils.JwtTokenUtil;
 import org.springframework.core.io.Resource;
@@ -38,38 +36,18 @@ import org.springframework.web.multipart.MultipartFile;
 @Controller
 @RequestMapping("/profile")
 public class UsersProfileController {
-    @Autowired
-    MyAppUserRepository myAppUserRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private MyAppUserService userService;
 
-    @Autowired
-    MyAppUserService userService;
+    public UsersProfileController(MyAppUserService userService) {
+        this.userService = userService;
+    }
 
-    @Autowired
-    EmailService emailService;
+    private void uploadAvatar(MultipartFile file, UserData data) throws IOException {
 
+        userService.uploadAvatar(file, data);
 
-    private void uploadAvatar(MultipartFile file, MyAppUser user) throws IOException {
-
-        String uploadDir = "uploads/avatars/";
-        Files.createDirectories(Paths.get(uploadDir));
-
-        if (user.getAvatarPath() != null && !user.getAvatarPath().isBlank()) {
-            Path oldPath = Paths.get(user.getAvatarPath().replaceFirst("^/", "")); 
-            if (Files.exists(oldPath)) {
-                Files.delete(oldPath);
-            }
-        }   
-
-        String filename = "user_" + user.getId() + "_avatar_"+ file.getOriginalFilename();
-        Path path = Paths.get(uploadDir + filename);
-
-        Files.write(path, file.getBytes());
-
-        user.setAvatarPath(uploadDir + filename);
-        user.isHasAvatar(true);
+        
     }
 
     @GetMapping("/uploads/avatars/{filename:.+}")

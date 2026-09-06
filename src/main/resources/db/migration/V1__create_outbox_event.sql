@@ -1,12 +1,12 @@
 CREATE TABLE outbox_event (
     id UUID PRIMARY KEY,
-    claim_token UUID NOT NULL,
-    locked_by VARCHAR(255) NOT NULL,
+    claim_token UUID,
     
     -- aggregate_type - это письмо (т.е. добавляем письмо в outbox)
     aggregate_type VARCHAR(50) NOT NULL,
     aggregate_id VARCHAR(255) NOT NULL,
-
+    aggregate_version BIGINT NOT NULL,
+    
 
     event_type VARCHAR(50) NOT NULL,
 

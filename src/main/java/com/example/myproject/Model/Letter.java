@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.example.myproject.DTO.FontData;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -17,6 +18,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
@@ -43,8 +46,6 @@ public class Letter {
     @Column(nullable = false)
     private long version;
 
-    private String password;
-
     private String title;
 
     private String text;
@@ -69,9 +70,9 @@ public class Letter {
     |  5 | abc123       |
     +----+--------------+
 
-    letter_images
+    images
     +--------------------+--------------------+
-    | letter_id | image_path                  |
+    | letter_id          | image_path         |
     +--------------------+--------------------+
     | 5                  | /images/photo1.jpg |
     | 5                  | /images/photo2.jpg |
@@ -80,13 +81,14 @@ public class Letter {
     Вот это описано в аннотациях
     
     */
-    @ElementCollection
-    @CollectionTable(
-        name = "letter_images",
-        joinColumns = @JoinColumn(name = "letter_id", referencedColumnName = "id")
+    @OneToMany(
+        mappedBy =  "letter",
+        cascade = CascadeType.ALL, 
+        orphanRemoval = true
     )
-    @Column(name = "image_path")
-    private List<String> imagesPaths;
+    @OrderColumn(name = "position")
+    private List<Image> images = new ArrayList<>();
+
 
     @Embedded
     private FontData font;
@@ -95,5 +97,14 @@ public class Letter {
     @Column(name= "reaction_code")
     private List<String> reactions;
 
+    public void addImage(Image image) {
+        images.add(image);
+        image.setLetter(this);
 
+    }
+    public void removeImage(Image image) {
+        if(images.remove(image)) {
+            image.setLetter(null);
+        }
+    }
 }

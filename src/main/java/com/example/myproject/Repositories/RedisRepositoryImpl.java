@@ -57,51 +57,63 @@ public class RedisRepositoryImpl implements RedisRepository {
 
 
     @Override
-    public Boolean evictLetter(String publicToken, String email){
+    public Boolean evictLetter(String publicToken, String email, Long version){
         if (publicToken == null || email == null) {
             return false;
         }
-        String key = "cache:letter:" + publicToken;
-
+        String key1 = "cache:letter:" + publicToken;
+        String key2 = "cache:letter:fence:" + publicToken;
 
         RedisScript<Long> DELETE_LETTER_SCRIPT = RedisScript.of(
             """
-            
+            local incomingVersion = tonumber(ARGV[1])
             local value = redis.call('GET', KEYS[1])
+            local publicToken = ARGV[2]
+            local fence = tonumber(redis.call('GET', KEYS[2], incomingVersion) or '-1')
             
             if not value then
-                return 0
+                if incomingVersion > fence then
+                    redis.call('SET', KEYS[2], incomingVersion)
+                end
+                return 1
             end
             local data = cjson.decode(value)
 
             local owner = data.authorEmail;
+            local cachedVersion = tonumber(data.version);
+
+            if incomingVersion <= cachedVersion then
+                return -1
+            end
 
             if not owner then
-                return -1;
+                return -1
             end
-            
             redis.call('DEL', KEYS[1])
-            redis.call('SREM', KEYS[2], KEYS[1])
+            redis.call('SREM', KEYS[3], publicToken)
+            if incomingVersion > fence then
+                redis.call('SET', KEYS[2], incomingVersion)
+                return 1
+            end
+
+            redis.call('SET', KEYS[2], fence + 1)
 
             return 1
 
             """, Long.class
         );
-
+        String cacheUserEmail = "cache:user:" + email;
         Long result = redisTemplate.execute(
             DELETE_LETTER_SCRIPT,
-            List.of(key, email),
-            email
+            List.of(key1, key2, cacheUserEmail),
+            version.toString(), publicToken
         );
 
-        if (result == null){
+        if (result == null || result < 1){
             return false;
         }
-        if (result.intValue() == 1) {
-            return true;
-        }
-        
-        return false;
+      
+        return true;
     }
 
 
@@ -253,36 +265,62 @@ public class RedisRepositoryImpl implements RedisRepository {
 
         RedisScript<Long> redisScript = RedisScript.of(
             """
-                for i = 1, #KEYS do
-                    local json = ARGV[(i - 1) * 2 + 1]
-                    local ttl = ARGV[(i - 1) * 2 + 2]
-                    if ttl <= 0 do
-                        goto continue
-                    end
+                local itemCount = math.floor(#KEYS / 2)
+                for i = 1, itemCount do
+                    local incomingVer = tonumber(ARGV[(i - 1) * 3 + 1])
+                    local json = ARGV[(i - 1) * 3 + 2]
+                    local ttl = ARGV[(i - 1) * 3 + 3]
                     
-                    redis.call('SET', KEYS[i], json, 'EX', ttl)
+                    local data = cjson.decode(json)
+                    local currentVer = tonumber(redis.call('GET', KEYS[(i - 1) * 2 + 1]) or '-1')
 
-                    ::continue::
+                    if incomingVer > currentVer then
+                        local currentLetter = redis.call('GET', KEYS[(i - 1) * 2 + 1])
+                        if currentLetter then
+                            local cachedData = cjson.decode(currentLetter)
+                            local cachedVersion = tonumber(cachedData.version)
+                            if incomingVer > cachedVersion then
+                                local ttlSeconds = tonumber(ttl)
+                                if ttl > 0 then
+                                    local fenceKey =  KEYS[(i - 1) * 2 + 2]
+                                    redis.call('SET', KEYS[(i - 1) * 2 + 1], json, 'EX', ttlSeconds)
+                                    redis.call('SET', fenceKey, incomingVer)
+                                end
+                            end
+                        else 
+                            local ttlSeconds = tonumber(ttl)
+                            if ttl > 0 then
+                                local fenceKey =  KEYS[(i - 1) * 2 + 2]
+                                redis.call('SET', KEYS[(i - 1) * 2 + 1], json, 'EX', ttlSeconds)
+                                redis.call('SET', fenceKey, incomingVer)
+                            end
+                        end
+                    end
+
                 end
+                return 1
+
             """, Long.class
         );
 
         for (CachedWrite write : cachedWrites) {
             CachedLetter cached = write.cachedLetter();
 
-            if (cached == null || cached.publicToken() == null || ) {
+            if (cached == null || cached.publicToken() == null) {
                 continue;
             }
 
             Duration ttl = write.ttl();
 
-            if (ttl.isNegative() || ttl.isZero() || ttl == null) {
+            if (ttl == null || ttl.isNegative() || ttl.isZero()) {
                 continue;
             }
 
             try {
                 String json = objectMapper.writeValueAsString(cached);
-                keys.add("cache:letter" + cached.publicToken());
+                keys.add("cache:letter:" + cached.publicToken());
+                keys.add("cache:letter:fence:" + cached.publicToken());
+                args.add(cached.version().toString());
                 args.add(json);
                 args.add(String.valueOf(ttl.getSeconds()));
             } catch (JSONException e) {
@@ -293,7 +331,7 @@ public class RedisRepositoryImpl implements RedisRepository {
 
         if (keys.isEmpty()) return;
 
-        redisTemplate.execute(redisScript, keys, args);
+        redisTemplate.execute(redisScript, keys, args.toArray());
     }
 
     @Override
@@ -302,13 +340,13 @@ public class RedisRepositoryImpl implements RedisRepository {
             return Map.of();
         }
 
-    
+        
         RedisScript<String> script = RedisScript.of("""
                 keys = redis.call('HVALS', KEYS[1])
 
                 local result = {}
                 for i = 1, #keys do 
-                    local key = keys[i]
+                    local key = "cache:letter:" .. keys[i]
                     local value = redis.call('GET', key)
 
                     if value then
@@ -316,27 +354,38 @@ public class RedisRepositoryImpl implements RedisRepository {
                     end
                 end
 
-                return cjison.encode(result)
+                return cjson.encode(result)
 
                 """, String.class);
         
 
-        String json = redisTemplate.execute(script,tokens);
-
-
-        Map<String, CachedLetter> cachedLetters = objectMapper.readValue(json, new TypeReference<Map<String, CachedLetter>>() {});
-
-        return cachedLetters;
-
-    }
-    private Boolean checkNewVersion(String token, Long currentVersion) {
-        String json = redisTemplate.opsForValue().get("cache:letter" + token).toString();
-        if (json == null) {
-            return true;
+        List<String> keys = tokens.stream().map(token -> "cache:letter:" + token).toList();
+        List<Object> objects = redisTemplate.opsForValue().multiGet(keys);
+        if (objects == null ) {
+            return Map.of();
         }
-        CachedLetter letter = objectMapper.readValue(json, CachedLetter.class);
-        return currentVersion > letter.version();
+
+        Map<String, CachedLetter> result = new HashMap<>(objects.size());
+
+        for (int i= 0 ; i < objects.size(); i++) {
+            Object obj = objects.get(i);
+            if (obj == null) {
+                continue;
+            }
+            try {
+                CachedLetter letter = objectMapper.readValue(obj.toString(), CachedLetter.class);
+                result.put(letter.publicToken(), letter);
+            }catch (Exception exception) {
+                log.warn("Invalid cachedLetter JSON for token={}",tokens.get(i), exception);
+            }
+        }
+
+
+        return result;
+
     }
+
+    
     @Override
     public Long putLetter(CachedLetter letter, Duration ttl) {
         if (letter == null || letter.publicToken() == null ||
@@ -345,19 +394,45 @@ public class RedisRepositoryImpl implements RedisRepository {
         }
 
 
-        String  key = "cache:letter:" + letter.publicToken();
+        String  key1 = "cache:letter:" + letter.publicToken();
+        String  key2 = "cache:letter:fence:" + letter.publicToken();
+        RedisScript<Long> script = RedisScript.of(
+            """
+                local currentVer = tonumber(redis.call('GET', KEYS[2]) or '-1')
+
+                local incomingVer = tonumber(ARGV[1])
+                if incomingVer < currentVer then
+                    return 0 
+                end
+
+                local currentLetter = redis.call('GET', KEYS[1])
+                
+                if currentLetter then
+                    local data = cjson.decode(currentLetter)
+                    local cachedVersion = tonumber(data.version)
+
+                    if incomingVer <= cachedVersion then
+                        return 0 
+                    end
+                end
+
+                redis.call('SET', KEYS[1], ARGV[2], 'EX', ARGV[3])
+                redis.call('SET', KEYS[2], incomingVer)
+                return 1
+            """, Long.class
+        );
 
         if (ttl == null || ttl.isNegative() || ttl.isZero()) {
             return 0L;
         }
         
         try {
-            String json = objectMapper.writeValueAsString(letter);
-            if (checkNewVersion(letter.publicToken(), letter.version())) {
-                redisTemplate.opsForValue().set(key, json, ttl);
-                return 1L;
-            } 
-            return 0L;
+            String incomingCachedLetterJson = objectMapper.writeValueAsString(letter);
+            Long version = letter.version();
+
+
+            Long res = redisTemplate.execute(script, List.of(key1, key2), String.valueOf(version), incomingCachedLetterJson,  String.valueOf(ttl.getSeconds()));
+            return res;
         }catch (JSONException e) {
             throw new IllegalStateException("Failed to serialize CachedLetter", e);
         }
@@ -367,10 +442,16 @@ public class RedisRepositoryImpl implements RedisRepository {
     public Optional<CachedLetter> findLetter(String publicToken) {
         String  key = "cache:letter:" + publicToken;
 
-        String json = redisTemplate.opsForValue().get(key).toString();
+        Object jsonObj = redisTemplate.opsForValue().get(key);
+        if (jsonObj == null) {
+            return Optional.empty();
+        }
+
+        String json = jsonObj.toString();
         if (json == null) {
             return Optional.empty();
         }
+
         Long ttlSeconds = redisTemplate.getExpire(key, TimeUnit.SECONDS);
 
         if (ttlSeconds == null || ttlSeconds  <= -2) {

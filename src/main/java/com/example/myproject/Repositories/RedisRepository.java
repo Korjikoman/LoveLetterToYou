@@ -13,7 +13,7 @@ import com.example.myproject.Model.Letter;
 public interface RedisRepository {
     Optional<CachedLetter> findLetter(String publicToken);
     Long putLetter(CachedLetter letter, Duration ttl);
-    Boolean evictLetter(String publicToken, String email);
+    Boolean evictLetter(String publicToken, String email, Long version);
     Map<String, CachedLetter> getLettersByTokens(List<String> tokens);
     void putLetters(List<CachedWrite> cachedWrites);
     

@@ -6,15 +6,19 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.myproject.Component.LetterMapper;
 import com.example.myproject.DTO.CachedWrite;
@@ -23,11 +27,14 @@ import com.example.myproject.DTO.DeleteResult;
 import com.example.myproject.DTO.EditResult;
 import com.example.myproject.DTO.LetterSummaryView;
 import com.example.myproject.DTO.FontData;
+import com.example.myproject.DTO.ImageMetadata;
+import com.example.myproject.DTO.ImageStatus;
 import com.example.myproject.DTO.LetterData;
 import com.example.myproject.DTO.LetterPage;
 import com.example.myproject.DTO.LetterView;
 import com.example.myproject.DTO.UpdateLetterData;
 import com.example.myproject.Model.CachedLetter;
+import com.example.myproject.Model.Image;
 import com.example.myproject.Model.Letter;
 import com.example.myproject.Model.MyAppUser;
 import com.example.myproject.Model.OutboxEvent;
@@ -49,11 +56,15 @@ public class LetterService {
     private OutboxEventRepository outboxEventRepository;
     private Clock clock;
     private LetterMapper letterMapper;
+    private ImageStorage imageStorage;
+    private ImageService imageService;
+
+    
 
     private static final Duration MAX_CACHE_TTL = Duration.ofHours(24);
     private static final Logger log = LoggerFactory.getLogger(LetterService.class);
     
-    public LetterService(LetterRepository letterRepository, RedisRepository redisRepository, MyAppUserRepository userRepository, PasswordEncoder encoder, Clock clock, OutboxEventRepository outboxEventRepository, LetterMapper letterMapper){
+    public LetterService(LetterRepository letterRepository, RedisRepository redisRepository, MyAppUserRepository userRepository, PasswordEncoder encoder, Clock clock, OutboxEventRepository outboxEventRepository, LetterMapper letterMapper, ImageStorage imageStorage, ImageService imageService){
         this.letterRepository = letterRepository;
         this.redisRepository = redisRepository;
         this.userRepository = userRepository;
@@ -61,6 +72,8 @@ public class LetterService {
         this.clock = clock;
         this.outboxEventRepository = outboxEventRepository;
         this.letterMapper = letterMapper;
+        this.imageStorage = imageStorage;
+        this.imageService = imageService;
     }
 
     public LetterPage getLetters(String email, Long beforeId, int pageSize) {
@@ -159,8 +172,8 @@ public class LetterService {
 
     }
 
-    private void burnLetter(String publicToken,  String email){
-        redisRepository.evictLetter(publicToken, email);
+    private void burnLetter(String publicToken,  String email, Long version){
+        redisRepository.evictLetter(publicToken, email, version);
         letterRepository.deleteByPublicToken(publicToken);
 
     }
@@ -186,7 +199,7 @@ public class LetterService {
                 CachedLetter cachedLetter = cached.get();
                 if (cachedLetter.expiresAt().isAfter(now) && cachedLetter.securityKey().equals(key)) {
                     if (cachedLetter.burnAfterOpening()) {
-                        burnLetter(publicToken, cachedLetter.authorEmail());
+                        burnLetter(publicToken, cachedLetter.authorEmail(), cachedLetter.version());
                     }
                     return Optional.of(letterMapper.toView(cachedLetter));
                 }
@@ -219,13 +232,15 @@ public class LetterService {
         }
 
         if (cached.burnAfterOpening()) {
-            burnLetter(publicToken, cached.authorEmail());
+            burnLetter(publicToken, cached.authorEmail(), cached.version());
         }
         
 
         return Optional.of(letterMapper.toView(cached));
 
     }
+
+    
     public Optional<LetterView> getLetter(String publicToken, String email) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email пользователя не указан");
@@ -296,86 +311,129 @@ public class LetterService {
         letter.setText(updateData.letterText());
         letter.setTitle(updateData.letterTitle());
 
-        if (updateData.password() != null){
-            letter.setPassword(encoder.encode(updateData.password()));
-
-        }
         
         letter.setExpiresAt(clock.instant().plus(updateData.ttl(), ChronoUnit.MINUTES));
 
-        letterRepository.save(letter);
 
+        // save images in temp directory and update letter metadata
+        List<ImageMetadata> metadatas = imageStorage.storeAll(publicToken, updateData.addImages(), false);
+        List<String> newImagesPaths = new ArrayList<>();
+        List<String> oldImagesPaths = new ArrayList<>();
+        
+        for (ImageMetadata metadata : metadatas) {
+            newImagesPaths.add(metadata.mainDir());
+            oldImagesPaths.add(metadata.tempDir());
+        }
+        
+        // save new images in db
+        List<Image> addedImages = imageService.addImages(metadatas); 
+        for (Image img : addedImages) {
+            letter.addImage(img);
+        }
 
-       
-        outboxEventRepository.save(
-            OutboxEvent.evictLetter(publicToken, email, clock.instant())
-        );
+        
+        // delete old images paths
+        Set<UUID> uuidsSet = new HashSet<>(updateData.deleteImagesUUIDs());
+        List<String> removedKeys = new ArrayList<>();
+        for (Image image : letter.getImages()) {
+            if (uuidsSet.contains(image.getId())) {
+                removedKeys.add(image.getImage_path());
+                letter.removeImage(image);
+            }
+        }
+        
+
+        letterRepository.saveAndFlush(letter);
+        Long newVer = letter.getVersion();
+        
+        
+        List<OutboxEvent> outboxEvents = List.of(
+            OutboxEvent.evictLetter(publicToken, email, newVer, clock.instant()),
+            OutboxEvent.updateImages(publicToken, email,removedKeys, oldImagesPaths, newImagesPaths, clock.instant(), newVer)
+        ); // update persistent storage
+
+        outboxEventRepository.saveAll(outboxEvents);
+
 
         
         return EditResult.UPDATED;
     }
 
     @Transactional
-    public CreateLetterResponse createLetter(String email, LetterData createData) {
-        if (email == null || email.isBlank() || createData == null || createData.reactions().isEmpty() || createData.ttl() == null ||
+    public CreateLetterResponse createLetter(String email, LetterData createData, List<MultipartFile> images) {
+        if (email == null || email.isBlank() || createData == null || createData.ttl() == null ||
     createData.ttl() < 5 || createData.ttl() > 1440 || createData.letterText() == null || createData.letterText().isBlank() ||createData.letterTitle() == null || createData.letterTitle().isBlank() ) {
 
-            return new CreateLetterResponse(null, "Invalid data");
+            return new CreateLetterResponse(null, null, null, "Invalid data");
         }
 
         Letter letter = new Letter();
-        String publicToken = PublicToken.generatePublicToken();
-        String password = createData.password();
 
-        String securityKey = PublicToken.generateSecurityKey();
-        String title = createData.letterTitle();
-        String text = createData.letterText();
-        if (text.isBlank() || text.isEmpty()) {
-            return new CreateLetterResponse(null, "Empty letter");
+        try {
+            String publicToken = PublicToken.generatePublicToken();
 
+            String securityKey = PublicToken.generateSecurityKey();
+            String title = createData.letterTitle();
+            String text = createData.letterText();
+            if (text.isBlank() || text.isEmpty()) {
+                return new CreateLetterResponse(null, null, null, "Empty letter");
+
+            }
+
+            MyAppUser user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                return new CreateLetterResponse(null, null, null, "User not found");
+            }
+
+            Integer ttl = createData.ttl();
+            Boolean burnAfterOpening = createData.burn_after_opening();
+
+
+            List<String> reactions = createData.reactions();
+            
+            // font settings
+            Boolean bold = createData.font().isFontBold();
+            Boolean cursive = createData.font().isFontCursive();
+            Boolean underlined = createData.font().isFontUnderlined();
+            String family = createData.font().fontFamily();
+            String name = createData.font().fontName();
+            
+            FontData font = new FontData(bold, cursive, underlined, family, name);
+
+            letter.setAuthorEmail(email);
+            letter.setPublicToken(publicToken);
+            letter.setSecurityKey(securityKey);
+            
+            letter.setTitle(title);
+            letter.setText(text);
+            
+            letter.setUser(user);
+            
+            letter.setBurn_after_opening(burnAfterOpening);
+            letter.setFont(font);
+            letter.setReactions(reactions);
+            Instant expiresAt = clock.instant().plus(ttl, ChronoUnit.MINUTES);
+            letter.setExpiresAt(expiresAt);
+
+
+            List<String> imagesPaths = null;
+            List<ImageMetadata> imageMetadatas = null;
+            try {
+                imageMetadatas = imageStorage.storeAll(publicToken, images,true);
+                List<Image> imageObjects = imageService.addImages(imageMetadatas);
+                letter.setImages(imageObjects);
+            } catch (Exception e) {
+                imageStorage.deleteAll(imageMetadatas);
+            }
+
+            letterRepository.saveAndFlush(letter);
+
+            return new CreateLetterResponse(publicToken, securityKey, imagesPaths, null);
+
+        } catch (Exception e) {
+            throw e;
         }
-
-        MyAppUser user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) {
-            return new CreateLetterResponse(null, "User not found");
-        }
-
-        Integer ttl = createData.ttl();
-        Boolean burnAfterOpening = createData.burn_after_opening();
-        List<String> imagesPaths = createData.images();
-        List<String> reactions = createData.reactions();
         
-        // font settings
-        Boolean bold = createData.font().isFontBold();
-        Boolean cursive = createData.font().isFontCursive();
-        Boolean underlined = createData.font().isFontUnderlined();
-        String family = createData.font().fontFamily();
-        String name = createData.font().fontName();
-        
-        FontData font = new FontData(bold, cursive, underlined, family, name);
-
-        letter.setAuthorEmail(email);
-        letter.setPublicToken(publicToken);
-        letter.setSecurityKey(securityKey);
-        if (!password.isEmpty()) {
-            letter.setPassword(encoder.encode(password));
-        }else{
-            letter.setPassword(null);
-        }
-        letter.setTitle(title);
-        letter.setText(text);
-        
-        letter.setUser(user);
-        
-        letter.setBurn_after_opening(burnAfterOpening);
-        letter.setImagesPaths(imagesPaths);
-        letter.setFont(font);
-        letter.setReactions(reactions);
-        Instant expiresAt = clock.instant().plus(ttl, ChronoUnit.MINUTES);
-        letter.setExpiresAt(expiresAt);
-        letterRepository.save(letter);
-
-        return new CreateLetterResponse(publicToken, null);
     }
 
     @Transactional
@@ -394,12 +452,24 @@ public class LetterService {
         if (!letter.getAuthorEmail().equalsIgnoreCase(email)) {
             return DeleteResult.FORBIDDEN;
         }
+        List<Image> imagesToDelete = letter.getImages();
+        List<String> pathsToRemove = new ArrayList<>();
+        for (Image img : imagesToDelete) {
+            pathsToRemove.add(img.getImage_path());
+        }
 
         letterRepository.delete(letter);
+        letterRepository.flush();
+        
+        Long version = letter.getVersion();
+        
+      
+        List<OutboxEvent> outboxEvents = List.of(
+            OutboxEvent.evictLetter(publicToken, email, version, clock.instant()),
+            OutboxEvent.deleteImages(publicToken, email,pathsToRemove, clock.instant(), version)
+        ); 
 
-        outboxEventRepository.save(
-            OutboxEvent.evictLetter(publicToken, email, clock.instant())
-        );
+        outboxEventRepository.saveAll(outboxEvents); // update persistent storage
 
         return DeleteResult.DELETED;
     }

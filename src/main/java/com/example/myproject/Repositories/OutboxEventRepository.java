@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -29,6 +30,7 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID>{
         """, nativeQuery = true)
     List<OutboxEvent> lockAvailable(@Param("now") Instant now, @Param("batchSize") Integer batchSize);
     
+    @Modifying 
     @Query(value = """
             UPDATE outbox_event
             SET status = 'PROCESSED',
@@ -42,6 +44,7 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID>{
 
     Optional<OutboxEvent> findById(UUID id);
     
+    @Modifying 
     @Query(
         value = """
            DELETE FROM outbox_event WHERE id = :id 

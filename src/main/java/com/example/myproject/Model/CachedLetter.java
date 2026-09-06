@@ -12,11 +12,10 @@ public record CachedLetter(
     String authorName,
     String title,
     String text,
-    String password,
     Instant expiresAt,
     Long version,
     Boolean burnAfterOpening,
-    List<String> imagesPaths,
+    List<Image> images,
     List<String> reactions,
     FontData fontSettings
 ) {}

@@ -1,6 +1,9 @@
 package com.example.myproject.DTO;
 
 import java.util.List;
+import java.util.UUID;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.myproject.Model.Reaction;
 
@@ -21,13 +24,10 @@ public record UpdateLetterData (
     @Size(max=10000)
     String letterText,
 
-    String password,
-
     @NotNull
     @Min(1)
     @Max(1440)
     Integer ttl,
-
     
     boolean burn_after_opening,
     boolean isFontBold,
@@ -35,5 +35,7 @@ public record UpdateLetterData (
     boolean isFontUnderlined,
     String fontFamily,
     String fontName,
-    List<Reaction> reactions
+    List<Reaction> reactions,
+    List<MultipartFile> addImages,
+    List<UUID> deleteImagesUUIDs
 ) {}

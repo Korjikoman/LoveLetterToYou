@@ -13,7 +13,6 @@ import com.example.myproject.DTO.CreateUserResponse;
 import com.example.myproject.DTO.UserData;
 import com.example.myproject.Model.MyAppUser;
 import com.example.myproject.Repositories.MyAppUserRepository;
-import com.example.myproject.Services.EmailService;
 import com.example.myproject.Services.MyAppUserService;
 import com.example.myproject.Utils.JwtTokenUtil;
 
@@ -29,9 +28,8 @@ public class RegistrationController {
     
     private PasswordEncoder passwordEncoder;
     private MyAppUserService myAppUserService;
-    private EmailService emailService;
 
-    public RegistrationController( MyAppUserService myAppUserService, PasswordEncoder passwordEncoder, EmailService emailService) {
+    public RegistrationController( MyAppUserService myAppUserService, PasswordEncoder passwordEncoder) {
         this.myAppUserService = myAppUserService;
         this.passwordEncoder = passwordEncoder;
     }

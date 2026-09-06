@@ -21,19 +21,18 @@ public class LetterMapper {
             letter.text(),
             letter.expiresAt(),
             letter.burnAfterOpening(),
-            hasPassword(letter.password()),
-            copyList(letter.imagesPaths()),
+            copyList(letter.images()),
             copyList(letter.reactions()),
             letter.fontSettings()
         );
     }
 
     public LetterSummaryView toSummaryView(CachedLetter cachedLetter) {
-        return new LetterSummaryView(cachedLetter.publicToken(), cachedLetter.version(), cachedLetter.expiresAt());
+        return new LetterSummaryView(cachedLetter.publicToken(), cachedLetter.title(), cachedLetter.text(), cachedLetter.version(), cachedLetter.expiresAt());
     }
 
     public LetterSummaryView toSummaryView(Letter letter) {
-        return new LetterSummaryView(letter.getPublicToken(), letter.getVersion(), letter.getExpiresAt());
+        return new LetterSummaryView(letter.getPublicToken(), letter.getTitle(), letter.getText(), letter.getVersion(), letter.getExpiresAt());
     }
 
     public CachedLetter toCached(Letter letter) {
@@ -44,11 +43,10 @@ public class LetterMapper {
             letter.getUser().getUsername(),
             letter.getTitle(),
             letter.getText(),
-            letter.getPassword(),
             letter.getExpiresAt(),
             letter.getVersion(),
             letter.isBurn_after_opening(),
-            copyList(letter.getImagesPaths()),
+            copyList(letter.getImages()),
             copyList(letter.getReactions()),
             letter.getFont()
         );
@@ -56,11 +54,7 @@ public class LetterMapper {
     }
 
 
-    private Boolean hasPassword(String password) {
-        return password != null && !password.isBlank();
-    }
-
-    private List<String> copyList(List<String> source) {
+    private static <T> List<T> copyList(List<T> source) {
         return source == null ? List.of() : List.copyOf(source);
     }
 

@@ -3,9 +3,11 @@ package com.example.myproject.Repositories;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -46,7 +48,7 @@ public interface LetterRepository extends JpaRepository <Letter, Long>{
         AND l.user.email = :email
         AND l.expiresAt > :now
         """)
-    List<Letter>findActiveByTokens(@Param("missing") List<String> missingTokens, @Param("email") String email, @Param("now") Instant now);
+    List<Letter>findActiveByTokens(@Param("missingTokens") List<String> missingTokens, @Param("email") String email, @Param("now") Instant now);
 
 
     Optional<Letter> findByPublicTokenAndAuthorEmailIgnoreCaseAndExpiresAtAfter(String publicToken, String email, Instant now);

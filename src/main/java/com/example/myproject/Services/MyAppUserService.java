@@ -1,18 +1,15 @@
 package com.example.myproject.Services;
 
-import java.nio.file.attribute.UserPrincipalNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.myproject.DTO.CreateUserResponse;
 import com.example.myproject.DTO.UserData;
@@ -23,7 +20,6 @@ import com.example.myproject.Utils.JwtTokenUtil;
 import jakarta.transaction.Transactional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
-import lombok.AllArgsConstructor;
 
 @Service
 public class MyAppUserService implements UserDetailsService{
@@ -71,6 +67,25 @@ public class MyAppUserService implements UserDetailsService{
         
     }
     
+    public uploadAvatar(MultipartFile file, UserData data) {
+        String uploadDir = "uploads/avatars/";
+        Files.createDirectories(Paths.get(uploadDir));
+
+        if (user.getAvatarPath() != null && !user.getAvatarPath().isBlank()) {
+            Path oldPath = Paths.get(user.getAvatarPath().replaceFirst("^/", "")); 
+            if (Files.exists(oldPath)) {
+                Files.delete(oldPath);
+            }
+        }   
+
+        String filename = "user_" + user.getId() + "_avatar_"+ file.getOriginalFilename();
+        Path path = Paths.get(uploadDir + filename);
+
+        Files.write(path, file.getBytes());
+
+        user.setAvatarPath(uploadDir + filename);
+        user.isHasAvatar(true);
+    }
 
     @Override
     public UserDetails loadUserByUsername(String email)throws UsernameNotFoundException {

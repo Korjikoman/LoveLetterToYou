@@ -3,6 +3,8 @@ package com.example.myproject.DTO;
 import java.time.Instant;
 import java.util.List;
 
+import com.example.myproject.Model.Image;
+
 public record LetterView (
     String publicToken,
     String authorName,
@@ -10,13 +12,12 @@ public record LetterView (
     String text,
     Instant expiresAt,
     Boolean burnAfterOpening,
-    Boolean passwordProtected,
-    List<String> imagesPaths,
+    List<Image> images,
     List<String> reactions,
     FontData font
 ) {
     public LetterView {
-        imagesPaths = imagesPaths == null ? List.of() : List.copyOf(imagesPaths);
+        images = images == null ? List.of() : List.copyOf(images);
         reactions = reactions == null ? List.of() : List.copyOf(reactions);
     }
     

@@ -55,7 +55,11 @@ public class OutboxLeaseService {
                 token,
                 event.getEvent_type(),
                 event.getAggregate_id(),
+                event.getAggregate_version(),
                 event.getAggregate_email(),
+                event.getPaths_to_delete(),
+                event.getOld_images_paths(),
+                event.getNew_images_paths(),
                 event.getAttempts()
             ));
 
