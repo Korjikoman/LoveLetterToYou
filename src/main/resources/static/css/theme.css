@@ -214,6 +214,14 @@ a {
     transform: rotate(5deg) scale(1.06);
 }
 
+.logo-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
 .logo-text {
     font-family: 'Fredoka', sans-serif;
     font-size: clamp(1.25rem, 2.6vw, 1.8rem);
@@ -223,12 +231,14 @@ a {
 }
 
 .greeting {
-    max-width: 24ch;
-    margin: .2rem 0 0;
+    display: block;
+    max-width: 32ch;
+    margin: .3rem auto 0;
     overflow: hidden;
-    color: var(--ink-soft);
-    font-size: .84rem;
-    font-weight: 700;
+    color: var(--berry-dark);
+    font-size: clamp(1rem, 1.8vw, 1.12rem);
+    font-weight: 900;
+    line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
 }

@@ -35,8 +35,6 @@
                  aria-expanded="false"
                  aria-describedby="open-hint"
                  aria-label="Open your romantic letter">
-                <div class="envelope-back" aria-hidden="true"></div>
-
                 <article class="letter-card" aria-label="Your romantic letter" aria-hidden="true">
                     <h2 data-animate-letters th:text="${letterTitle}">A heartfelt letter</h2>
                     <p data-animate-letters th:text="${letterText}">Your letter appears here.</p>
@@ -55,10 +53,12 @@
                     <span class="envelope-heart heart-three"></span>
                 </div>
 
-                <div class="envelope-flap" aria-hidden="true">
+                <div class="flap-top" aria-hidden="true">
                     <span class="seal">♥</span>
                 </div>
-                <div class="envelope-pocket" aria-hidden="true"></div>
+                <div class="flap-left" aria-hidden="true"></div>
+                <div class="flap-right" aria-hidden="true"></div>
+                <div class="flap-bottom" aria-hidden="true"></div>
             </div>
         </div>
 

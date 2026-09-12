@@ -129,6 +129,7 @@ body {
     width: 145px;
     height: 102px;
     position: relative;
+    overflow: hidden;
     border: 3px solid var(--berry-dark);
     border-radius: 14px;
     background: var(--cream);
@@ -136,19 +137,46 @@ body {
     transform: rotate(-8deg);
 }
 
-.lost-envelope::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    clip-path: polygon(0 0, 50% 58%, 100% 0);
-    background: var(--lavender);
-    border-radius: 12px;
-}
-
-.lost-envelope::after {
-    content: var(--error-face, '•︵•');
+.lost-envelope > .flap-top,
+.lost-envelope > .flap-left,
+.lost-envelope > .flap-right,
+.lost-envelope > .flap-bottom {
     position: absolute;
     inset: 0;
+    display: block;
+    pointer-events: none;
+}
+
+.lost-envelope > .flap-top {
+    z-index: 3;
+    clip-path: polygon(0 0, 50% 58%, 100% 0);
+    background: var(--lavender);
+    filter: drop-shadow(0 2px 0 rgba(112,45,80,.34));
+}
+
+.lost-envelope > .flap-left {
+    z-index: 1;
+    clip-path: polygon(0 0, 52% 55%, 0 100%);
+    background: linear-gradient(135deg, #fff4dc, #f8dfc7);
+}
+
+.lost-envelope > .flap-right {
+    z-index: 1;
+    clip-path: polygon(100% 0, 48% 55%, 100% 100%);
+    background: linear-gradient(225deg, #fff4dc, #f4d8c0);
+}
+
+.lost-envelope > .flap-bottom {
+    z-index: 2;
+    clip-path: polygon(0 100%, 50% 48%, 100% 100%);
+    background: linear-gradient(160deg, #fff1d8, #f2d3bd);
+    filter: drop-shadow(0 -1px 0 rgba(112,45,80,.25));
+}
+
+.lost-envelope-face {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
     display: grid;
     place-items: center;
     color: var(--berry-dark);
@@ -156,6 +184,10 @@ body {
     font-size: 1.25rem;
     font-weight: 700;
     transform: translateY(16px);
+}
+
+.lost-envelope-face::before {
+    content: var(--error-face, '•︵•');
 }
 
 .error-500 .lost-envelope {
