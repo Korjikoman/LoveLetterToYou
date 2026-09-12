@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-
     const avatarImg = document.getElementById("avatarImage");
     const avatarInput = document.getElementById("avatarInput");
     const passwordInput = document.getElementById("passwordInput");
@@ -33,31 +32,89 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Apply button 
+    // Сохраняем данные профиля и аватар отдельными согласованными запросами.
     applyBtn.addEventListener("click", async () => {
-        const username = document.getElementById("usernameInput").value;
-        const password = document.getElementById("passwordInput").value;
-        const avatarFile = document.getElementById("avatarInput").files[0];
+        applyBtn.disabled = true;
+        let unattachedImageId = null;
 
-        const formData = new FormData();
-        if (username) formData.append("username", username);
-        if (password) formData.append("password", password);
-        if (avatarFile) formData.append("file", avatarFile);
+        try {
+            const username = document.getElementById("usernameInput").value.trim();
+            const password = passwordInput.value;
+            const avatarFile = avatarInput.files[0];
 
-        
-        const response = await csrfFetch("/profile/get", {
-            method: "POST",
-            body: formData
-        });
-        const data = await response.json();
+            await requestJson("/profile/api", {
+                method: "PATCH",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    username: username || null,
+                    password: password || null
+                })
+            });
 
-        if (data.success) {
-            showToast(data.message);
-        } else {
-            showToast(data.message, true);
+            if (avatarFile) {
+                const formData = new FormData();
+                formData.append("file", avatarFile);
+
+                const upload = await requestJson("/api/images?purpose=AVATAR", {
+                    method: "POST",
+                    body: formData
+                });
+                unattachedImageId = upload.imageId;
+
+                const ready = await waitUntilReady(upload.imageId);
+                const avatar = await requestJson("/profile/api/avatar", {
+                    method: "PUT",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({imageId: upload.imageId})
+                });
+
+                unattachedImageId = null;
+                avatarImg.src = `${avatar.contentUrl}?v=${Date.now()}`;
+                avatarImg.dataset.hasAvatar = "true";
+                avatarImg.dataset.avatarPath = ready.contentUrl;
+                avatarInput.value = "";
+            }
+
+            passwordInput.value = "";
+            showToast("Profile saved");
+        } catch (error) {
+            if (unattachedImageId) {
+                csrfFetch(`/api/images/${encodeURIComponent(unattachedImageId)}`, {
+                    method: "DELETE"
+                }).catch(() => {});
+            }
+            showToast(error.message || "Cannot save profile", true);
+        } finally {
+            applyBtn.disabled = false;
         }
-    
     });
+
+    async function waitUntilReady(imageId) {
+        for (let attempt = 0; attempt < 60; attempt++) {
+            const state = await requestJson(
+                `/api/images/${encodeURIComponent(imageId)}/status`
+            );
+
+            if (state.status === "READY" || state.status === "ATTACHED") {
+                return state;
+            }
+            if (["FAILED", "DELETED", "DELETE_PENDING", "DELETE_AFTER_PROMOTION"]
+                .includes(state.status)) {
+                throw new Error("Image processing failed");
+            }
+            await new Promise(resolve => window.setTimeout(resolve, 500));
+        }
+        throw new Error("Image processing timed out");
+    }
+
+    async function requestJson(url, options = {}) {
+        const response = await csrfFetch(url, options);
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(body.error || `Request failed (${response.status})`);
+        }
+        return body;
+    }
 
 
     // showToast logic

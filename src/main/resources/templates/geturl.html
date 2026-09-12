@@ -19,6 +19,18 @@
             </button>
         </div>
 
+        <label class="url-label" for="letterSecurityKey">Секретный ключ</label>
+        <div class="url-box">
+            <input id="letterSecurityKey" type="text" readonly>
+            <button type="button" class="btn-copy"
+                    onclick="const i=document.getElementById('letterSecurityKey');
+                        i.select();
+                        navigator.clipboard.writeText(i.value);">
+                <span aria-hidden="true">📋</span> Copy key
+            </button>
+        </div>
+        <p>Передайте ссылку и ключ получателю отдельно. Без ключа письмо не откроется.</p>
+
         <div class="actions">
             <a href="/letters/get" class="action-btn btn-secondary"><span aria-hidden="true">📚</span> My Letters</a>
             <a href="/create/letter" class="action-btn btn-primary"><span aria-hidden="true">💌</span> Write another</a>

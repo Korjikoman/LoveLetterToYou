@@ -11,30 +11,17 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
-  mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    protocol: smtp
-  properties:
-    mail:
-      debug: ${MAIL_DEBUG:false}
-      smtp:
-        auth: ${MAIL_AUTH:true}
-        starttls:
-          enable: ${MAIL_STARTTLS:true}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect 
     show-sql: true
   
 server:
-  host: ${MAIN_HOST}
-  port: ${MAIN_PORT}
+  address: ${MAIN_HOST:127.0.0.1}
+  port: ${MAIN_PORT:8080}
 
 app:
   public-url: http://${MAIN_HOST}:${MAIN_PORT}

@@ -23,7 +23,18 @@
             </div>
 
             <input type="hidden" id="publicToken" th:value="${letterPublicToken}">
-
+            <input type="hidden" id="letterVersion" th:value="${letterVersion}">
+            <input type="hidden" id="letterBurnAfterOpening" th:value="${letterBurnAfterOpening}">
+            <input type="hidden" id="fontPresent" th:value="${fontPresent}">
+            <input type="hidden" id="fontBold" th:value="${fontBold}">
+            <input type="hidden" id="fontCursive" th:value="${fontCursive}">
+            <input type="hidden" id="fontUnderlined" th:value="${fontUnderlined}">
+            <input type="hidden" id="fontFamily" th:value="${fontFamily}">
+            <input type="hidden" id="fontName" th:value="${fontName}">
+            <input type="hidden"
+                   class="existing-reaction"
+                   th:each="reaction : ${reactions}"
+                   th:value="${reaction}">
             <div class="letter-form">
                 <div class="form-group">
                     <label class="form-label" for="letterTitle">Letter title</label>
@@ -42,7 +53,31 @@
                               th:text="${letterText}"></textarea>
                 </div>
 
-                <div class="options-grid">
+                <div class="form-group image-upload-panel">
+                    <label class="form-label" for="letterImages">Изображения</label>
+                    <input id="letterImages"
+                           class="image-file-input"
+                           type="file"
+                           accept="image/jpeg,image/png"
+                           multiple>
+                    <p class="label-note">Добавьте новые или удалите прикреплённые изображения. Максимум — 10.</p>
+                    <div id="letterImageList" class="letter-image-list">
+                        <article class="letter-image-item"
+                                 data-ready="true"
+                                 data-existing="true"
+                                 th:each="image : ${images}"
+                                 th:attr="data-image-id=${image.id}">
+                            <img th:src="${image.contentUrl}" alt="Изображение письма">
+                            <span>Прикреплено</span>
+                            <button type="button"
+                                    class="letter-image-remove"
+                                    aria-label="Удалить изображение">Удалить</button>
+                        </article>
+                    </div>
+                    <p id="letterImageStatus" class="image-upload-status" aria-live="polite"></p>
+                </div>
+
+                <div class="options-grid single-column">
                     <div class="form-group slider-group">
                         <label for="livingTime">
                             Keep this letter alive for
@@ -50,33 +85,11 @@
                         </label>
                         <input type="range"
                                id="livingTime"
-                               min="1"
+                               min="5"
                                max="1440"
                                th:value="${letterTTL}">
                     </div>
 
-                    <div class="form-group protection-panel">
-                        <label class="checkbox-label" for="protectedLetter">
-                            <input type="checkbox"
-                                   id="protectedLetter"
-                                   aria-controls="passwordContainer"
-                                   th:checked="${letterPassword != null and !#strings.isEmpty(letterPassword)}">
-                            <span>Lock with a new code</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group password-block"
-                     id="passwordContainer"
-                     th:style="${letterPassword != null and !#strings.isEmpty(letterPassword)} ? 'display:flex' : 'display:none'">
-                    <label>New 5-character code <span class="label-note">letters + numbers</span></label>
-                    <div id="passwordInputs" aria-label="Five-character letter password">
-                        <input class="password-char" maxlength="1" aria-label="Password character 1">
-                        <input class="password-char" maxlength="1" aria-label="Password character 2">
-                        <input class="password-char" maxlength="1" aria-label="Password character 3">
-                        <input class="password-char" maxlength="1" aria-label="Password character 4">
-                        <input class="password-char" maxlength="1" aria-label="Password character 5">
-                    </div>
                 </div>
             </div>
 
@@ -95,57 +108,62 @@
 </th:block>
 
 <th:block th:fragment="scripts">
+<script src="/js/letter-images.js"></script>
 <script>
     let letterTTL = Number(document.getElementById('livingTime').value);
-    let letterPassword = null;
-
     const livingTimeSlider = document.getElementById('livingTime');
     const livingTimeValue = document.getElementById('livingTimeValue');
-    const protectedCheckbox = document.getElementById('protectedLetter');
-    const passwordContainer = document.getElementById('passwordContainer');
-    const passwordInputs = document.querySelectorAll('.password-char');
+    const imageManager = createLetterImageManager();
 
     livingTimeSlider.addEventListener('input', () => {
         livingTimeValue.textContent = livingTimeSlider.value;
         letterTTL = Number(livingTimeSlider.value);
     });
 
-    protectedCheckbox.addEventListener('change', () => {
-        passwordContainer.style.display = protectedCheckbox.checked ? 'flex' : 'none';
-        passwordInputs.forEach(i => i.value = '');
-        letterPassword = null;
-    });
+    document.getElementById('saveButton').addEventListener('click', async event => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+            await imageManager.waitUntilReady();
+            const payload = {
+                letterTitle: document.getElementById('letterTitle').value.trim(),
+                letterText: document.getElementById('letterContent').value.trim(),
+                ttl: letterTTL,
+                burn_after_opening: document.getElementById('letterBurnAfterOpening').value === 'true',
+                font: document.getElementById('fontPresent').value === 'true' ? {
+                    isFontBold: document.getElementById('fontBold').value === 'true',
+                    isFontCursive: document.getElementById('fontCursive').value === 'true',
+                    isFontUnderlined: document.getElementById('fontUnderlined').value === 'true',
+                    fontFamily: document.getElementById('fontFamily').value,
+                    fontName: document.getElementById('fontName').value
+                } : null,
+                reactions: Array.from(document.querySelectorAll('.existing-reaction'))
+                    .map(input => input.value),
+                imageIds: imageManager.getImageIds(),
+                expectedVersion: Number(document.getElementById('letterVersion').value)
+            };
 
-    passwordInputs.forEach((input, idx) => {
-        input.addEventListener('input', () => {
-            if (input.value && idx < 4) passwordInputs[idx + 1].focus();
-            const pass = Array.from(passwordInputs).map(i => i.value).join('');
-            letterPassword = /^[A-Za-z0-9]{5}$/.test(pass) ? pass : null;
-        });
-    });
+            const token = document.getElementById('publicToken').value;
+            const response = await csrfFetch(
+                `/letters/edit?publicToken=${encodeURIComponent(token)}`,
+                {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                }
+            );
 
-    document.getElementById('saveButton').addEventListener('click', () => {
-        const payload = {
-            title: document.getElementById('letterTitle').value.trim(),
-            text: document.getElementById('letterContent').value.trim(),
-            ttl: letterTTL,
-            password: letterPassword
-        };
-
-        const token = document.getElementById('publicToken').value;
-
-        csrfFetch(`/letters/edit?publicToken=${encodeURIComponent(token)}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        }).then(r => {
-            if (r.ok) {
+            if (response.ok) {
                 window.location.href = '/letters/get?success=true';
             } else {
-                showMsg('Error ✖', 'danger');
+                const body = await response.json().catch(() => ({}));
+                throw new Error(body.error || 'Не удалось сохранить письмо');
             }
-        })
-        .catch(() => showMsg('Network error', 'danger'));
+        } catch (error) {
+            showMsg(error.message || 'Ошибка соединения', 'danger');
+        } finally {
+            button.disabled = false;
+        }
     });
 
     function showMsg(msg, type) {

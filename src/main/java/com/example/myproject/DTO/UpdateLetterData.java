@@ -3,39 +3,41 @@ package com.example.myproject.DTO;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.web.multipart.MultipartFile;
-
-import com.example.myproject.Model.Reaction;
+import com.fasterxml.jackson.annotation.JsonAlias;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record UpdateLetterData (
-    
+
     @NotBlank
     @Size(max=200)
-    String letterTitle,
+    @JsonAlias("title") String letterTitle,
 
     @NotBlank
     @Size(max=10000)
-    String letterText,
+    @JsonAlias("text") String letterText,
 
     @NotNull
-    @Min(1)
+    @Min(5)
     @Max(1440)
     Integer ttl,
-    
-    boolean burn_after_opening,
-    boolean isFontBold,
-    boolean isFontCursive,
-    boolean isFontUnderlined,
-    String fontFamily,
-    String fontName,
-    List<Reaction> reactions,
-    List<MultipartFile> addImages,
-    List<UUID> deleteImagesUUIDs
-) {}
+
+    @JsonAlias("burnAfterOpening") boolean burn_after_opening,
+    FontData font,
+    List<String> reactions,
+
+    @Size(max = 10)
+    List<UUID> imageIds,
+
+    long expectedVersion
+) {
+    public UpdateLetterData {
+        reactions = reactions == null ? List.of() : List.copyOf(reactions);
+
+        imageIds = imageIds == null ? List.of() : List.copyOf(imageIds);
+    }
+}

@@ -56,12 +56,8 @@
                     <label for="passwordInput">New password</label>
                     <input id="passwordInput" type="password" placeholder="Leave blank to keep your current one" autocomplete="new-password">
                     <div id="passwordWarning" class="password-warning">
-                        After saving, your password will be changed and you will need to confirm it via email.
+                        После сохранения новый пароль начнёт действовать сразу.
                     </div>
-                </div>
-
-                <div class="verification-warning" th:if="${!passwordIsVerified}" role="status">
-                    <span aria-hidden="true">⚠️</span> A confirmation link has been sent to your email.
                 </div>
 
                 <button id="applyBtn" class="apply-btn" type="button">

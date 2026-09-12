@@ -77,8 +77,6 @@ public class ContentController {
 
     @GetMapping("/api/user/user-is-online")
     public String redirectToIndex() {
-        
-        System.out.println("NIGGA");
         return "redirect:/index";
     }
     

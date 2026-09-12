@@ -1,6 +1,5 @@
 package com.example.myproject.Security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -8,41 +7,25 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 import com.example.myproject.Services.MyAppUserService;
 
-import lombok.AllArgsConstructor;
-
 @Configuration
-@AllArgsConstructor
 @EnableWebSecurity
 public class SecurityConfig {
-    
-    @Autowired
-    private final MyAppUserService appUserService;
-    
-    
+
     @Bean
-    public UserDetailsService userDetailsService(){
-        return appUserService;
-    }
-    
-    @Bean
-    public AuthenticationProvider authenticationProvider(){
+    public AuthenticationProvider authenticationProvider(
+        MyAppUserService appUserService,
+        PasswordEncoder passwordEncoder
+    ) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(appUserService);
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
-    
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
-    
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
         return httpSecurity
@@ -51,7 +34,9 @@ public class SecurityConfig {
                 httpForm.loginPage("/req/login").permitAll();
                 httpForm.usernameParameter("email");
                 httpForm.passwordParameter("password");
-                httpForm.defaultSuccessUrl("/index");
+                // После входа не восстанавливаем случайно сохранённый запрос /error.
+                httpForm.defaultSuccessUrl("/index", true);
+                httpForm.failureUrl("/req/login?error");
                 
             })
             
@@ -59,9 +44,11 @@ public class SecurityConfig {
                 session.maximumSessions(1);
             })
             .authorizeHttpRequests(registry ->{
-                registry.requestMatchers("/req/**","/css/**","/js/**", "/watch/letter/**", "/api/**").permitAll();
+                registry.requestMatchers(
+                    "/req/**", "/css/**", "/js/**", "/watch/letter/**", "/error"
+                ).permitAll();
                 
-                registry.requestMatchers("/create/**", "/letters/**", "/profile/**", "/index").authenticated();
+                registry.requestMatchers("/api/**", "/create/**", "/letter/**", "/letters/**", "/profile/**", "/index").authenticated();
                 
                 registry.anyRequest().authenticated();
             })

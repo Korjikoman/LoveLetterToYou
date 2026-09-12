@@ -1,6 +1,7 @@
 .git
-.gitignore
 .idea
-*.iml
-*.md
-README.md
+.vscode
+target
+data
+*.log
+month-plan.txt

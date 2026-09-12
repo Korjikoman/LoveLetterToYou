@@ -1,144 +1,121 @@
 package com.example.myproject.Controller;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import com.example.myproject.Model.MyAppUser;
-import com.example.myproject.Repositories.MyAppUserRepository;
-import com.example.myproject.Services.MyAppUserService;
-import com.example.myproject.Utils.JwtTokenUtil;
-import org.springframework.core.io.Resource;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.example.myproject.DTO.UserProfileView;
+import com.example.myproject.Images.DTO.ImageView;
+import com.example.myproject.Services.MyAppUserService;
+import com.example.myproject.Services.ProfileImageService;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 @Controller
 @RequestMapping("/profile")
 public class UsersProfileController {
+    private final MyAppUserService userService;
+    private final ProfileImageService profileImageService;
 
-    private MyAppUserService userService;
-
-    public UsersProfileController(MyAppUserService userService) {
+    public UsersProfileController(
+        MyAppUserService userService,
+        ProfileImageService profileImageService
+    ) {
         this.userService = userService;
-    }
-
-    private void uploadAvatar(MultipartFile file, UserData data) throws IOException {
-
-        userService.uploadAvatar(file, data);
-
-        
-    }
-
-    @GetMapping("/uploads/avatars/{filename:.+}")
-    @ResponseBody
-    public ResponseEntity<Resource> serveAvatar(@PathVariable String filename) throws MalformedURLException {
-        Path file = Paths.get("uploads/avatars/").resolve(filename);
-        Resource resource = new UrlResource(file.toUri());
-
-        if (!resource.exists() || !resource.isReadable()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, "image/jpeg")
-                .body(resource);
+        this.profileImageService = profileImageService;
     }
 
     @GetMapping("/get")
-    public String getMethodName(Authentication auth, Model model) {
-        String email = auth.getName();
-        MyAppUser user = new MyAppUser();
-        Optional<MyAppUser> optionalUser = myAppUserRepository.findByEmail(email);
-        if (optionalUser.isEmpty()){
-            return "redirect:/index?error=true";
-        }
-        user = optionalUser.get();
-        if (user == null){
-            return "redirect:/index?error=true";
-        }
+    public String profilePage(Authentication authentication, Model model) {
+        UserProfileView profile = userService.getProfile(
+            requireEmail(authentication)
+        );
 
-        String username = user.getUsername();
-        Boolean passwordIsVerified = user.getIsVerified();
-        Boolean userHasAvatar = user.gethasAvatar();
-        String avatarPath = user.getAvatarPath();
-        
-        model.addAttribute("username", username);
-        model.addAttribute("email", email);
-        model.addAttribute("passwordIsVerified", passwordIsVerified);
-        model.addAttribute("userHasAvatar", userHasAvatar);
-        model.addAttribute("avatarPath", avatarPath);
+        model.addAttribute("username", profile.username());
+        model.addAttribute("email", profile.email());
+        model.addAttribute("userHasAvatar", profile.avatar() != null);
+        model.addAttribute(
+            "avatarPath",
+            profile.avatar() == null ? null : profile.avatar().contentUrl()
+        );
 
         return "users-profile";
     }
 
-    @PostMapping(value = "/get")
-    public ResponseEntity<Map<String, Object>> changeValues(
-            @RequestParam(required = false) String username,
-            @RequestParam(required = false) String password,
-            @RequestParam(required = false) MultipartFile file,
-            Authentication auth
+    @PatchMapping(
+        value = "/api",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<UserProfileView> updateProfile(
+        @RequestBody ProfileUpdateRequest request,
+        Authentication authentication
     ) {
-        Map<String, Object> response = new HashMap<>();
-        
+        UserProfileView profile = userService.updateProfile(
+            requireEmail(authentication),
+            request.username(),
+            request.password()
+        );
 
-        try {
-
-            String email = auth.getName();
-
-            MyAppUser user = myAppUserRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            if (username != null && !username.isBlank()) {
-                user.setUsername(username);
-            }
-
-            if (password != null && !password.isBlank()) {
-                user.setPassword(passwordEncoder.encode(password));
-
-                String verificationToken = JwtTokenUtil.generateToken(user.getEmail());
-                user.setVerificationToken(verificationToken);
-                user.setIsVerified(false);
-                //emailService.sendVerificationEmail(user.getEmail(), verificationToken);
-            }
-
-            if (file != null && !file.isEmpty()) {
-                uploadAvatar(file, user);
-            }
-
-            myAppUserRepository.save(user);
-            response.put("success", true);
-            response.put("message", "Profile updated successfully");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("success", false);
-            response.put("message", "Failed to update profile");
-        }
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return ResponseEntity.ok(profile);
     }
 
+    // Прикрепляет к профилю уже готовое изображение.
+    @PutMapping(
+        value = "/api/avatar",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<ImageView> setAvatar(
+        @Valid @RequestBody AvatarRequest request,
+        Authentication authentication
+    ) {
+        ImageView avatar = profileImageService.setAvatar(
+            requireEmail(authentication),
+            request.imageId()
+        );
 
-    
+        return ResponseEntity.ok(avatar);
+    }
+
+    // Отвязывает аватар, а удаление файла выполняется в фоне.
+    @DeleteMapping("/api/avatar")
+    public ResponseEntity<Void> deleteAvatar(Authentication authentication) {
+        profileImageService.deleteAvatar(requireEmail(authentication));
+        return ResponseEntity.accepted().build();
+    }
+
+    private String requireEmail(Authentication authentication) {
+        if (authentication == null
+            || authentication.getName() == null
+            || authentication.getName().isBlank()) {
+            throw new ResponseStatusException(
+                org.springframework.http.HttpStatus.UNAUTHORIZED,
+                "Требуется авторизация"
+            );
+        }
+
+        return authentication.getName();
+    }
+
+    public record ProfileUpdateRequest(
+        String username,
+        String password
+    ) {}
+
+    public record AvatarRequest(
+        @NotNull UUID imageId
+    ) {}
 }

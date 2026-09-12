@@ -1,108 +1,124 @@
 package com.example.myproject.Services;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Optional;
 
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.myproject.DTO.CreateUserResponse;
 import com.example.myproject.DTO.UserData;
+import com.example.myproject.DTO.UserProfileView;
+import com.example.myproject.Images.DTO.ImageView;
+import com.example.myproject.Images.Model.Image;
 import com.example.myproject.Model.MyAppUser;
 import com.example.myproject.Repositories.MyAppUserRepository;
-import com.example.myproject.Utils.JwtTokenUtil;
-
-import jakarta.transaction.Transactional;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
-public class MyAppUserService implements UserDetailsService{
-    
-    private MyAppUserRepository repository;
-    private PasswordEncoder passwordEncoder;
+public class MyAppUserService implements UserDetailsService {
+    private final MyAppUserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
-
-    public MyAppUserService(MyAppUserRepository repository,  PasswordEncoder passwordEncoder) {
+    public MyAppUserService(
+        MyAppUserRepository repository,
+        PasswordEncoder passwordEncoder
+    ) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
     }
-    
+
     @Transactional
     public CreateUserResponse createUser(UserData data) {
-
-        Optional<MyAppUser> userOptional = repository.findByEmail(data.email());
-
-        if (!userOptional.isEmpty()){
-            return CreateUserResponse.USER_EXISTS;
-        }
-        try {
-            MyAppUser user = new MyAppUser();
-            user.setEmail(data.email());
-
-            String hash = passwordEncoder.encode(data.password());
-
-            user.setPassword(hash);
-
-            String verificationToken = JwtTokenUtil.generateToken(user.getEmail());
-
-            user.setVerificationToken(verificationToken);
-            user.setIsVerified(true);
-
-            user.isHasAvatar(false);
-
-            user.setAvatarPath(null);
-
-            repository.save(user);
-
-            return CreateUserResponse.USER_CREATED;
-        } catch (Exception exception) {
+        if (data == null
+            || data.email() == null || data.email().isBlank()
+            || data.password() == null || data.password().isBlank()) {
             return CreateUserResponse.ERROR;
         }
-        
+        if (repository.findByEmail(data.email()).isPresent()) {
+            return CreateUserResponse.USER_EXISTS;
+        }
+
+        MyAppUser user = new MyAppUser();
+        user.setEmail(data.email().trim());
+        user.setUsername(normalizeUsername(data.username(), data.email()));
+        user.setPassword(passwordEncoder.encode(data.password()));
+        repository.save(user);
+        return CreateUserResponse.USER_CREATED;
     }
-    
-    public uploadAvatar(MultipartFile file, UserData data) {
-        String uploadDir = "uploads/avatars/";
-        Files.createDirectories(Paths.get(uploadDir));
 
-        if (user.getAvatarPath() != null && !user.getAvatarPath().isBlank()) {
-            Path oldPath = Paths.get(user.getAvatarPath().replaceFirst("^/", "")); 
-            if (Files.exists(oldPath)) {
-                Files.delete(oldPath);
+    @Transactional(readOnly = true)
+    public UserProfileView getProfile(String email) {
+        MyAppUser user = findUser(email);
+        return toProfile(user);
+    }
+
+    /** Изменяет только переданные непустые поля профиля. */
+    @Transactional
+    public UserProfileView updateProfile(
+        String email,
+        String username,
+        String password
+    ) {
+        MyAppUser user = repository.findByEmailForUpdate(email)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (username != null && !username.isBlank()) {
+            String normalized = username.trim();
+            if (normalized.length() > 100) {
+                throw new IllegalArgumentException("Username is too long");
             }
-        }   
-
-        String filename = "user_" + user.getId() + "_avatar_"+ file.getOriginalFilename();
-        Path path = Paths.get(uploadDir + filename);
-
-        Files.write(path, file.getBytes());
-
-        user.setAvatarPath(uploadDir + filename);
-        user.isHasAvatar(true);
+            user.setUsername(normalized);
+        }
+        if (password != null && !password.isBlank()) {
+            if (password.length() < 8 || password.length() > 200) {
+                throw new IllegalArgumentException("Invalid password length");
+            }
+            user.setPassword(passwordEncoder.encode(password));
+        }
+        return toProfile(user);
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email)throws UsernameNotFoundException {
-        
-
-        Optional<MyAppUser> user = repository.findByEmail(email);
-        if (user.isPresent()) {
-            var userObj = user.get();
-            return User.builder()
-                    .username(userObj.getEmail())
-                    .password(userObj.getPassword())
-                    .build();    
-        }else{
-            throw new UsernameNotFoundException(email);
-        }
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String email)
+        throws UsernameNotFoundException {
+        MyAppUser user = repository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException(email));
+        return User.builder()
+            .username(user.getEmail())
+            .password(user.getPassword())
+            .build();
     }
-    
-    
-    
+
+    private MyAppUser findUser(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("User email is required");
+        }
+        return repository.findByEmail(email)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    private UserProfileView toProfile(MyAppUser user) {
+        Image avatar = user.getAvatarImage();
+        ImageView avatarView = avatar == null
+            ? null
+            : new ImageView(
+                avatar.getId(),
+                "/api/images/" + avatar.getId() + "/content",
+                0
+            );
+        return new UserProfileView(
+            user.getUsername(), user.getEmail(), avatarView
+        );
+    }
+
+    private String normalizeUsername(String username, String email) {
+        return username == null || username.isBlank()
+            ? email.substring(0, email.indexOf('@') > 0 ? email.indexOf('@') : email.length())
+            : username.trim();
+    }
 }

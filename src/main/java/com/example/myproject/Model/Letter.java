@@ -5,11 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.example.myproject.DTO.FontData;
+import com.example.myproject.Images.Model.Image;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,7 +20,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,18 +30,20 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
+@Table(name = "letter")
 public class Letter {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "letter_seq")
+    @SequenceGenerator(name = "letter_seq", sequenceName = "letter_seq", allocationSize = 50)
     private Long id;
 
-    @Column(name="user_email")
-    private String authorEmail; 
+    @Column(name = "author_email", nullable = false, length = 320)
+    private String authorEmail;
     
-    @Column(unique=true, nullable = false, updatable = false)
+    @Column(unique = true, nullable = false, updatable = false, length = 64)
     private String publicToken;
 
-    @Column(unique=true, nullable = false, updatable = false)
+    @Column(unique = true, nullable = false, updatable = false, length = 128)
     private String securityKey;
 
     
@@ -46,9 +51,14 @@ public class Letter {
     @Column(nullable = false)
     private long version;
 
+    @Column(nullable = false, length = 200)
     private String title;
 
+    @Column(nullable = false, length = 10_000)
     private String text;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -58,53 +68,42 @@ public class Letter {
     private Instant expiresAt;
 
     @Column(name="burn_after_opening", nullable = false)
-    private boolean burn_after_opening; 
+    private boolean burnAfterOpening;
 
 
-    /*
-    
-    letter
-    +----+--------------+
-    | id | public_token |
-    +----+--------------+
-    |  5 | abc123       |
-    +----+--------------+
-
-    images
-    +--------------------+--------------------+
-    | letter_id          | image_path         |
-    +--------------------+--------------------+
-    | 5                  | /images/photo1.jpg |
-    | 5                  | /images/photo2.jpg |
-    +--------------------+--------------------+
-    
-    Вот это описано в аннотациях
-    
-    */
     @OneToMany(
         mappedBy =  "letter",
         cascade = CascadeType.ALL, 
         orphanRemoval = true
     )
-    @OrderColumn(name = "position")
-    private List<Image> images = new ArrayList<>();
+    @OrderBy("position ASC")
+    private List<LetterImage> imageLinks = new ArrayList<>();
 
+    @Column(name = "images_revision", nullable = false)
+    private long imagesRevision;
 
     @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "isFontBold", column = @Column(name = "font_bold")),
+        @AttributeOverride(name = "isFontCursive", column = @Column(name = "font_cursive")),
+        @AttributeOverride(name = "isFontUnderlined", column = @Column(name = "font_underlined")),
+        @AttributeOverride(name = "fontFamily", column = @Column(name = "font_family", length = 100)),
+        @AttributeOverride(name = "fontName", column = @Column(name = "font_name", length = 100))
+    })
     private FontData font;
-
     
     @Column(name= "reaction_code")
     private List<String> reactions;
 
-    public void addImage(Image image) {
-        images.add(image);
-        image.setLetter(this);
-
+    public void addImage(Image image, int position) {
+        imageLinks.add(new LetterImage(this, image, position));
     }
-    public void removeImage(Image image) {
-        if(images.remove(image)) {
-            image.setLetter(null);
-        }
+
+    public void removeImage(LetterImage link) {
+        imageLinks.remove(link);
+    }
+
+    public void incrementImagesRevision() {
+        imagesRevision++;
     }
 }

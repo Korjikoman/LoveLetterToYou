@@ -22,17 +22,49 @@
     </div>
 
     <main class="letter-container">
-        <p class="letter-intro">A little something arrived for you&nbsp; ✨</p>
-        <div class="envelope">
-            <div class="envelope-back" aria-hidden="true"></div>
-            <div class="envelope-flap" aria-hidden="true"></div>
+        <p class="letter-intro">
+            A little something arrived for you&nbsp; ✨
+            <span class="open-hint" id="open-hint">Click the envelope to open it</span>
+        </p>
 
-            <article class="letter-card" aria-label="Your romantic letter">
-                <h2 th:text="${letterTitle}">A heartfelt letter</h2>
-                <p th:text="${letterText}">Your letter appears here.</p>
-                <div class="author" th:text="'— ' + ${authorEmail}">— With love</div>
-            </article>
+        <div class="envelope-stage">
+            <div class="envelope is-closed"
+                 id="letter-envelope"
+                 role="button"
+                 tabindex="0"
+                 aria-expanded="false"
+                 aria-describedby="open-hint"
+                 aria-label="Open your romantic letter">
+                <div class="envelope-back" aria-hidden="true"></div>
+
+                <article class="letter-card" aria-label="Your romantic letter" aria-hidden="true">
+                    <h2 data-animate-letters th:text="${letterTitle}">A heartfelt letter</h2>
+                    <p data-animate-letters th:text="${letterText}">Your letter appears here.</p>
+                    <div class="public-letter-images" th:if="${!#lists.isEmpty(images)}">
+                        <img th:each="image : ${images}"
+                             th:src="@{/watch/letter/{token}/images/{id}(token=${publicToken},id=${image.id},key=${securityKey})}"
+                             alt="Изображение из письма"
+                             loading="lazy">
+                    </div>
+                    <div class="author" data-animate-letters th:text="'— ' + ${authorName}">— With love</div>
+                </article>
+
+                <div class="envelope-hearts" aria-hidden="true">
+                    <span class="envelope-heart heart-one"></span>
+                    <span class="envelope-heart heart-two"></span>
+                    <span class="envelope-heart heart-three"></span>
+                </div>
+
+                <div class="envelope-flap" aria-hidden="true">
+                    <span class="seal">♥</span>
+                </div>
+                <div class="envelope-pocket" aria-hidden="true"></div>
+            </div>
         </div>
+
+        <p class="sr-only" id="letter-status" aria-live="polite"></p>
     </main>
+
+    <script src="/js/watch_letter.js"></script>
 </body>
 </html>

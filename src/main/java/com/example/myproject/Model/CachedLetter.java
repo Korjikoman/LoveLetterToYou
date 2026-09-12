@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 import com.example.myproject.DTO.FontData;
+import com.example.myproject.Images.DTO.ImageView;
 
 public record CachedLetter(
     String publicToken,
@@ -15,7 +16,12 @@ public record CachedLetter(
     Instant expiresAt,
     Long version,
     Boolean burnAfterOpening,
-    List<Image> images,
+    List<ImageView> images,
     List<String> reactions,
     FontData fontSettings
-) {}
+) {
+    public CachedLetter {
+        images = images == null ? List.of() : List.copyOf(images);
+        reactions = reactions == null ? List.of() : List.copyOf(reactions);
+    }
+}
