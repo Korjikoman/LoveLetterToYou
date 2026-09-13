@@ -1,7 +1,10 @@
 package com.example.myproject.Utils;
 
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Random;
+
+import com.example.myproject.DTO.GenPair;
 
 
 
@@ -11,30 +14,17 @@ public class PublicToken {
     private static final int MAX_TOKEN_LENGTH = 32; 
     private static final int MIN_TOKEN_LENGTH = 16;
     private static final int KEY_LENGTH = 32;
-    
-    public static String generatePublicToken(){
-        StringBuffer token = new StringBuffer();
-        SecureRandom random = new SecureRandom();
-        Random randomCounter = new Random();
 
-        int counter = MIN_TOKEN_LENGTH + randomCounter.nextInt(MAX_TOKEN_LENGTH - MIN_TOKEN_LENGTH + 1);
-        int idx = 0;
-        for (int i=0; i < counter; i++){
-            idx = random.nextInt(TOKEN_ALPHABET.length());
-            token.append(TOKEN_ALPHABET.charAt(idx));
-        }
-        return token.toString();
-    }
+    private static final Random RNG = new Random();
+    private static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();
 
-    public static String generateSecurityKey() {
-        StringBuffer key = new StringBuffer();
-        SecureRandom random = new SecureRandom();
-        int idx = 0;
-        for (int i=0; i < KEY_LENGTH; i++){
-            idx = random.nextInt(KEY_ALPHABET.length());
-            key.append(KEY_ALPHABET.charAt(idx));
-        }
-        return key.toString();
+
+    public static synchronized GenPair generatePair() {
+        byte[] token = new byte[16];
+        byte[] key = new byte[16];
+        RNG.nextBytes(token);
+        RNG.nextBytes(key);
+        return new GenPair(B64.encodeToString(token), B64.encodeToString(key));
     }
 
 }

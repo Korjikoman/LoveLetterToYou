@@ -12,8 +12,21 @@
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let isOpen = false;
 
+    const autoLink = (text) => {
+        return text.replace(
+            /\bhttps?:\/\/[^\s]+/gu,
+            (url) => `<a class="letter-link" href="${url}" target="_blank" rel="noopener">${url}</a>`
+        );
+    };
+
     const wrapLetters = (element) => {
         const text = element.textContent;
+
+        if (text.includes('http://') || text.includes('https://')) {
+            element.innerHTML = autoLink(text);
+            return;
+        }
+
         const fragment = document.createDocumentFragment();
 
         element.setAttribute('aria-label', text);

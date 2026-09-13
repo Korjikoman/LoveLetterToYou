@@ -31,6 +31,14 @@ public interface LetterRepository extends JpaRepository <Letter, Long>{
     List<Letter> findAllByUser_EmailAndExpiresAtAfterOrderByIdDesc(String email,Instant now);
     boolean existsByPublicToken(String publicToken);
 
+    @Query("""
+        SELECT l
+        FROM Letter l
+        WHERE l.expiresAt > :now
+        ORDER BY l.id DESC
+    """)
+    List<Letter> findRecentActiveForTemplate(@Param("now") Instant now, Pageable pageable);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query(
         """

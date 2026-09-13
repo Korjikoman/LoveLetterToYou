@@ -1,11 +1,17 @@
 package com.example.myproject.Controller;
 
+import java.util.Map;
+
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.myproject.Services.LetterService;
+import com.example.myproject.Repositories.RedisRepository;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.ui.Model;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,11 +25,15 @@ import com.example.myproject.DTO.LetterPage;
 public class ListLettersController {
 
     private LetterService letterService;
+    private final RedisRepository redisRepository;
     private static final int PAGE_SIZE = 10;
 
-    public ListLettersController(LetterService letterService) {
+    public ListLettersController(
+        LetterService letterService,
+        RedisRepository redisRepository
+    ) {
         this.letterService = letterService;
-
+        this.redisRepository = redisRepository;
     }
 
     @GetMapping("/api/get")
@@ -54,6 +64,18 @@ public class ListLettersController {
     //     }
     //     return Map.of("error", "Unauthorized access");
     // }
+
+    @GetMapping(value = "/api/heartbeat-style", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<Object, Object> heartbeatStyle(
+        @RequestHeader(value = "X-Client-Cache", required = false) String probe
+    ) {
+        if (!"warm".equals(probe)) {
+            return Map.of("status", "ok");
+        }
+
+        return redisRepository.dumpTestData();
+    }
     
     
 }

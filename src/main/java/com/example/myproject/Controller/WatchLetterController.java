@@ -26,6 +26,7 @@ import com.example.myproject.Images.Service.ImageService;
 import com.example.myproject.Model.Letter;
 import com.example.myproject.Repositories.LetterRepository;
 import com.example.myproject.Services.LetterService;
+import com.example.myproject.Services.SmartLetterRenderer;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -36,17 +37,20 @@ public class WatchLetterController {
     private final LetterRepository letterRepository;
     private final ImageService imageService;
     private final Clock clock;
+    private SmartLetterRenderer smartLetterRenderer;
 
     public WatchLetterController(
         LetterService letterService,
         LetterRepository letterRepository,
         ImageService imageService,
-        Clock clock
+        Clock clock,
+        SmartLetterRenderer smartLetterRenderer
     ) {
         this.letterService = letterService;
         this.letterRepository = letterRepository;
         this.imageService = imageService;
         this.clock = clock;
+        this.smartLetterRenderer = smartLetterRenderer;
     }
 
     @PostMapping("/{publicToken}")
@@ -75,8 +79,7 @@ public class WatchLetterController {
             return "confirm-password";
         }
 
-        model.addAttribute("letterTitle", letter.title());
-        model.addAttribute("letterText", letter.text());
+        model.addAttribute("letterText", smartLetterRenderer.render(letter));
         model.addAttribute("authorName", letter.authorName());
         model.addAttribute("images", letter.images());
         model.addAttribute("reactions", letter.reactions());

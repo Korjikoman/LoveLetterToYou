@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.myproject.DTO.CreateLetterResponse;
 import com.example.myproject.DTO.DeleteResult;
 import com.example.myproject.DTO.EditResult;
+import com.example.myproject.DTO.GenPair;
 import com.example.myproject.DTO.LetterData;
 import com.example.myproject.DTO.UpdateLetterData;
 import com.example.myproject.Images.DTO.ImagePurpose;
@@ -56,6 +57,16 @@ public class LetterTransactionService {
         this.outboxRepository = outboxRepository;
     }
 
+    private GenPair generateUniquePair() {
+    for (int i = 0; i < 10; i++) {
+        GenPair pair = PublicToken.generatePair();
+        if (!letterRepository.existsByPublicToken(pair.publicToken())) {
+            return pair;
+        }
+    }
+    throw new IllegalStateException("Unable to generate unique token");
+}
+
     /** Создаёт письмо и привязывает заранее загруженные изображения одной транзакцией. */
     @Transactional
     public CreateLetterResponse createLetter(String email, LetterData data) {
@@ -77,8 +88,10 @@ public class LetterTransactionService {
         );
 
         Letter letter = new Letter();
-        letter.setPublicToken(generateUniqueToken());
-        letter.setSecurityKey(PublicToken.generateSecurityKey());
+
+        GenPair pair = generateUniquePair();
+        letter.setPublicToken(pair.publicToken());
+        letter.setSecurityKey(pair.securityKey());
         letter.setAuthorEmail(user.getEmail());
         letter.setUser(user);
         letter.setTitle(data.letterTitle().trim());
@@ -283,13 +296,13 @@ public class LetterTransactionService {
         return new CreateLetterResponse(null, null, List.of(), error);
     }
 
-    private String generateUniqueToken() {
-        for (int attempt = 0; attempt < 5; attempt++) {
-            String token = PublicToken.generatePublicToken();
-            if (!letterRepository.existsByPublicToken(token)) {
-                return token;
-            }
-        }
-        throw new IllegalStateException("Cannot generate a unique letter token");
-    }
+    // private String generateUniqueToken() {
+    //     for (int attempt = 0; attempt < 5; attempt++) {
+    //         String token = PublicToken.generatePublicToken();
+    //         if (!letterRepository.existsByPublicToken(token)) {
+    //             return token;
+    //         }
+    //     }
+    //     throw new IllegalStateException("Cannot generate a unique letter token");
+    // }
 }
