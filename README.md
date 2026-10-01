@@ -14,7 +14,7 @@ LoveLetterToYou — это сервис, который позволяет по�
  - Backend: Spring Boot
  - Frontend: Pure JavaScript + Thymeleaf
  - База данных: PostgreSQL, Redis
- - Load Balancer: Nginx
+ - Proxy: Nginx
  - Контейнеризация: Docker + Docker Compose
 
 ## Запуск проекта:
@@ -24,42 +24,28 @@ LoveLetterToYou — это сервис, который позволяет по�
 git clone https://github.com/your-username/LoveLetterToYou.git
 cd LoveLetterToYou
 ```
-### 2. Создайте и Настройте application.yml с параметрами вашей БД и Redis:
-   Пример:
-   ```
-   spring:
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: your-gmail@gmail.com
-    password: your_password
-    protocol: smtp
-    properties:
-      mail:
-        debug: true
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-  datasource:
-    url: jdbc:postgresql://localhost:5432/registration
-    username: postgres_username
-    password: yuor_password
-  data:
-    redis:
-      host: localhost
-      port: 6379
+### 2. Добавьте .env файл в корень проекта.
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect 
-    show-sql: true
+  Пример:
+  ```
+  NGINX_HOST=localhost
+  NGINX_PORT=80
 
-app:
-  public-url: http://localhost:8080
+
+  MAIN_HOST=127.0.0.1
+  MAIN_PORT=8080
+
+  OUTBOX_POLL_DELAY_MS=2000
+
+  POSTGRES_HOST=localhost
+  POSTGRES_PORT=5432
+  POSTGRES_DB=registration
+  POSTGRES_USER=loveletter_dev
+  POSTGRES_PASSWORD=loveletter_dev_123
+
+  REDIS_HOST=localhost
+  REDIS_PORT=6379
+
 ```
 
 ### 3. Соберите и запустите сервис с Docker Compose:
