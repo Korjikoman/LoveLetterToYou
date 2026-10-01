@@ -54,13 +54,12 @@ docker-compose up --build
 ```
 ## Скриншоты.
 
-<img width="745" height="794" alt="image" src="https://github.com/user-attachments/assets/2ea55b8f-c137-4b23-ab70-56a339e1eb20" />
-<img width="956" height="946" alt="image" src="https://github.com/user-attachments/assets/9c260756-6fae-417e-8892-8224c2609321" />
-<img width="825" height="948" alt="image" src="https://github.com/user-attachments/assets/f9783b55-5edd-4be3-b06d-9c57321d9a46" />
-<img width="637" height="419" alt="image" src="https://github.com/user-attachments/assets/e263842a-bae6-429f-a294-788b245814fc" />
-<img width="1392" height="859" alt="image" src="https://github.com/user-attachments/assets/7c101ca4-27f4-4661-9b0f-3cf91d2204a8" />
-<img width="1896" height="518" alt="image" src="https://github.com/user-attachments/assets/f267b2fc-2382-4adf-8a02-be0ad6378936" />
-
-
+<img width="850" height="849" alt="2026-10-01_19-39_2" src="https://github.com/user-attachments/assets/ac5220ea-a77b-4d9a-8c5b-abdb84431458" />
+<img width="926" height="893" alt="2026-10-01_19-39_1" src="https://github.com/user-attachments/assets/ef08820b-ecac-4712-9ca2-c3de7f733284" />
+<img width="713" height="736" alt="2026-10-01_19-39" src="https://github.com/user-attachments/assets/f2a4ab0d-e7b8-4472-b020-b5751f582d08" />
+<img width="910" height="960" alt="2026-10-01_19-38" src="https://github.com/user-attachments/assets/55bde22d-ff04-4195-9d52-81385c623f00" />
+<img width="1915" height="959" alt="2026-10-01_19-36_1" src="https://github.com/user-attachments/assets/0de2c6c0-f10d-4995-8894-928d9c185602" />
+<img width="1907" height="999" alt="2026-10-01_19-36" src="https://github.com/user-attachments/assets/85d8f3de-0bf3-4008-8289-64dfd897515d" />
+<img width="1921" height="1002" alt="2026-10-01_19-35" src="https://github.com/user-attachments/assets/a030570a-c2c7-40e5-8f57-2b3f7c4a34d2" />
 
 
