@@ -35,7 +35,6 @@ public class LetterController {
         this.letterService = letterService;
     }
 
-    // Письмо получает идентификаторы уже загруженных изображений из JSON.
     @PostMapping(
         value = {"/letter/create", "/create/letter"},
         consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -111,7 +110,6 @@ public class LetterController {
             remainingMinutes(letter.expiresAt())
         );
         model.addAttribute("reactions", letter.reactions());
-        model.addAttribute("letterBurnAfterOpening", letter.burnAfterOpening());
         FontData font = letter.font();
         model.addAttribute("fontPresent", font != null);
         model.addAttribute("fontBold", font != null && font.isFontBold());

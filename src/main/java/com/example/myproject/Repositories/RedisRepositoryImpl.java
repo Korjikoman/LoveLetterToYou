@@ -26,25 +26,16 @@ import tools.jackson.databind.ObjectMapper;
 @Repository
 public class RedisRepositoryImpl implements RedisRepository {
 
-    // Fence живёт дольше максимального TTL письма и не даёт старому чтению
-    // вернуть в кэш уже изменённую или удалённую версию.
     private static final long LETTER_FENCE_TTL_SECONDS = 172_800L;
 
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final HashOperations<String, String, Object> hashOperations;
     private final ObjectMapper objectMapper;
     private static final Logger log = LoggerFactory.getLogger(RedisRepositoryImpl.class);
 
-    private final int TIME_TO_LIVE_USER_ONLINE = 5; 
-    private final int TIME_TO_LIVE_USER_WRITING_LETTER = 5; // in secs
-
-    private static final String COUNT_ONLINE_USERS = "online_users";
-    private static final String COUNT_WRITING_LETTER_USERS = "writing_letter_users";
 
     public RedisRepositoryImpl(RedisTemplate<String, Object> template, ObjectMapper objectMapper){
         this.redisTemplate = template;
-        this.hashOperations = template.opsForHash();
         this.objectMapper = objectMapper;
     }
 
@@ -103,115 +94,12 @@ public class RedisRepositoryImpl implements RedisRepository {
         if (result == null || result < 1){
             return false;
         }
-      
+
         return true;
     }
 
 
-    @Override
-    public boolean isUserOnline(String email) {
-        Map<String, Object> data = hashOperations.entries(email);
-        if (data.isEmpty()){
-            return false;
-        }
-        String isOnline = (String) data.get("isOnline");
 
-        return Boolean.parseBoolean(isOnline);
-    }
-
-    @Override
-    public boolean isUserWritingLetter(String email) {
-        Map<String, Object> data = hashOperations.entries(email);
-        if (data.isEmpty()){
-            return false;
-        }
-        String isWritingLetter = (String) data.get("isWritingLetter");
-
-        return Boolean.parseBoolean(isWritingLetter);
-    }
-
-    @Override
-    public void setUserOnline(String email, boolean isOnline) {
-        if (email.isEmpty()) return;
-
-        String key = "user:online:"+email;
-
-
-        String script = String.format("""
-                redis.call('SET', KEYS[1], '%b', 'EX', ARGV[1])
-                return 1
-                """, isOnline);
-
-        RedisScript<Long> redisScript = RedisScript.of(script, Long.class);
-
-        redisTemplate.execute(
-            redisScript,
-            List.of(key),
-            String.valueOf(TIME_TO_LIVE_USER_ONLINE)
-        );
-
-        if (isOnline){
-            redisTemplate.opsForSet().add(COUNT_ONLINE_USERS, email);
-        }
-        else{
-            redisTemplate.opsForSet().remove(COUNT_ONLINE_USERS, email);
-        }
-
-        
-    }
-
-    @Override
-    public void setUserWritingLetter(String email, boolean isWritingLetter) {
-        if (email.isEmpty()) return;
-
-        String key = "user:writing:"+email;
-
-
-        String script = String.format("""
-                redis.call('SET', KEYS[1], '%b', 'EX', ARGV[1])
-                return 1
-                """, isWritingLetter);
-
-        RedisScript<Long> redisScript = RedisScript.of(script, Long.class);
-
-        redisTemplate.execute(
-            redisScript,
-            List.of(key),
-            String.valueOf(TIME_TO_LIVE_USER_WRITING_LETTER)
-        );
-
-        if (isWritingLetter){
-            redisTemplate.opsForSet().add(COUNT_WRITING_LETTER_USERS, email);
-        }
-        else{
-            redisTemplate.opsForSet().remove(COUNT_WRITING_LETTER_USERS, email);
-        }
-
-    }
-
-    @Override
-    public long countOnlineUsers() {
-        return redisTemplate.opsForSet().size(COUNT_ONLINE_USERS);
-    }
-
-
-    @Override
-    public long countWritingLetterUsers() {
-        return redisTemplate.opsForSet().size(COUNT_WRITING_LETTER_USERS);
-    }
-
-
-    @Override
-    public void updateUserOnline(String email) {
-        if (email.isBlank() || email.isEmpty()) return;
-        redisTemplate.expire("user:online:"+email, TIME_TO_LIVE_USER_ONLINE, TimeUnit.SECONDS);
-    }
-
-    @Override
-    public void updateUserWritingLetter(String email) {
-        if (email.isBlank() || email.isEmpty()) return;
-        redisTemplate.expire("user:writing:"+email, TIME_TO_LIVE_USER_WRITING_LETTER, TimeUnit.SECONDS);
-    }
 
     @Override
     public Map<Object, Object> dumpTestData() {
@@ -220,7 +108,7 @@ public class RedisRepositoryImpl implements RedisRepository {
     if (keys == null) return result;
 
     for (String key : keys) {
-        String type = redisTemplate.type(key).code(); // получаем тип ключа
+        String type = redisTemplate.type(key).code();
 
         switch (type) {
             case "string":
@@ -335,7 +223,7 @@ public class RedisRepositoryImpl implements RedisRepository {
             return Map.of();
         }
 
-        
+
         List<String> keys = tokens.stream().map(token -> "cache:letter:" + token).toList();
         List<Object> objects = redisTemplate.opsForValue().multiGet(keys);
         if (objects == null ) {
@@ -362,7 +250,7 @@ public class RedisRepositoryImpl implements RedisRepository {
 
     }
 
-    
+
     @Override
     public Long putLetter(CachedLetter letter, Duration ttl) {
         if (letter == null || letter.publicToken() == null ||
@@ -383,17 +271,17 @@ public class RedisRepositoryImpl implements RedisRepository {
 
                 local currentVer = tonumber(redis.call('GET', KEYS[2]) or '-1')
                 if incomingVer < currentVer then
-                    return 0 
+                    return 0
                 end
 
                 local currentLetter = redis.call('GET', KEYS[1])
-                
+
                 if currentLetter then
                     local decoded, data = pcall(cjson.decode, currentLetter)
                     local cachedVersion = decoded and tonumber(data.version) or -1
 
                     if incomingVer <= cachedVersion then
-                        return 0 
+                        return 0
                     end
                 end
 
@@ -407,7 +295,7 @@ public class RedisRepositoryImpl implements RedisRepository {
         if (letter.version() == null || ttlSeconds <= 0) {
             return 0L;
         }
-        
+
         try {
             String incomingCachedLetterJson = objectMapper.writeValueAsString(letter);
             Long version = letter.version();
@@ -450,7 +338,6 @@ public class RedisRepositoryImpl implements RedisRepository {
             CachedLetter letter = objectMapper.readValue(json, CachedLetter.class);
             return Optional.of(letter);
         } catch (Exception e) {
-            // Повреждённая запись кэша является промахом, а не ошибкой запроса.
             log.warn("Invalid CachedLetter JSON for token={}", publicToken, e);
             redisTemplate.delete(key);
             return Optional.empty();
@@ -462,7 +349,7 @@ public class RedisRepositoryImpl implements RedisRepository {
         if (email == null || email.isBlank() || new_token == null || new_token.isBlank()) {
             return false;
         }
-        
+
         String key = "cache:user:" + email;
         Long added = redisTemplate.opsForSet().add(key, new_token);
         return Long.valueOf(1L).equals(added);
@@ -490,7 +377,7 @@ public class RedisRepositoryImpl implements RedisRepository {
 
         String key = "cache:user:" + email;
         Long tokenSize = redisTemplate.opsForSet().size(key);
-    
+
         return tokenSize;
 
     }

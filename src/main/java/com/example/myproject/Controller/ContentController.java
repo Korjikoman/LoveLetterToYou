@@ -21,7 +21,7 @@ import com.example.myproject.Repositories.RedisRepository;
 
 @Controller
 public class ContentController {
-    
+
 
     @Autowired
     RedisRepository redisRepository;
@@ -39,7 +39,7 @@ public class ContentController {
 
     @GetMapping("/req/signup")
     public String signup() {
-        
+
         return "signup";
     }
 
@@ -47,12 +47,12 @@ public class ContentController {
     public String instance() {
         return System.getenv("HOSTNAME");
     }
-    
+
     @GetMapping("/create/letter/geturl")
     public String getURL() {
         return "geturl";
     }
-    
+
     @GetMapping("/index")
     public String home(Model model, Authentication authentication) {
         Optional<MyAppUser> getUser = myAppUserRepository.findByEmail(authentication.getName());
@@ -64,46 +64,11 @@ public class ContentController {
     }
 
 
-
-    // Обновляем TTL user is online
-    @PostMapping(value="/api/user/user-is-online")
-    @ResponseBody
-    public void check(Authentication auth){
-        if (auth == null){
-            return;
-        }
-        redisRepository.updateUserOnline(auth.getName());
-    }
-
-    @GetMapping("/api/user/user-is-online")
-    public String redirectToIndex() {
-        return "redirect:/index";
-    }
-    
-    // Обновляем TTL user is writing letter
-    @PostMapping(value="/api/letter/heartbeat-writing-letter")
-    @ResponseBody
-    public void leave(Authentication auth){
-        if (auth == null){
-            return;
-        }
-        // Пользователь не пишет письмо
-        redisRepository.updateUserWritingLetter(auth.getName());
-    }
-
-
-    @GetMapping("/api/letter/heartbeat-writing-letter")
-    public String redirectToCreateLetter() {
-        return "redirect:/create-letter";
-    }
-
     @GetMapping("/create/letter")
     public String createLetter(Authentication authentication) {
-        redisRepository.setUserWritingLetter(authentication.getName(), true);
-        
         return "create-letter";
     }
-    
-    
-    
+
+
+
 }

@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.example.myproject.Services.MyAppUserService;
 
@@ -27,33 +28,40 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
+    public SecurityFilterChain securityFilterChain(
+        HttpSecurity httpSecurity,
+        RequestRateLimitFilter requestRateLimitFilter
+    ) throws Exception{
         return httpSecurity
             .csrf(Customizer.withDefaults())
             .formLogin(httpForm ->{
                 httpForm.loginPage("/req/login").permitAll();
                 httpForm.usernameParameter("email");
                 httpForm.passwordParameter("password");
-                // После входа не восстанавливаем случайно сохранённый запрос /error.
                 httpForm.defaultSuccessUrl("/index", true);
                 httpForm.failureUrl("/req/login?error");
-                
+
             })
-            
+
             .sessionManagement(session -> {
                 session.maximumSessions(1);
             })
             .authorizeHttpRequests(registry ->{
                 registry.requestMatchers(
-                    "/req/**", "/css/**", "/js/**", "/watch/letter/**", "/error"
+                    "/req/**", "/css/**", "/js/**", "/watch/letter/**", "/error",
+                    "/actuator/health/**"
                 ).permitAll();
-                
+
                 registry.requestMatchers("/api/**", "/create/**", "/letter/**", "/letters/**", "/profile/**", "/index").authenticated();
-                
+
                 registry.anyRequest().authenticated();
             })
+            .addFilterBefore(
+                requestRateLimitFilter,
+                UsernamePasswordAuthenticationFilter.class
+            )
             .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/req/login").invalidateHttpSession(true).deleteCookies("JSESSIONID"))
             .build();
     }
-    
+
 }

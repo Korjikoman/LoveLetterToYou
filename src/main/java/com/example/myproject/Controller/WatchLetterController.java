@@ -88,7 +88,7 @@ public class WatchLetterController {
         return "open-letter-and-watch-content";
     }
 
-    /** Отдаёт файл только после проверки ключа и связи изображения с письмом. */
+
     @GetMapping("/{publicToken}/images/{imageId}")
     @ResponseBody
     public ResponseEntity<Resource> image(
@@ -131,8 +131,8 @@ public class WatchLetterController {
             )
             .body(content.resource());
     }
-        
-        
+
+
 }
-    
-    
+
+

@@ -21,7 +21,6 @@ public class OutboxBackoff {
 
         long half = baseSeconds / 2;
 
-        // Случайный разброс не даёт всем обработчикам повторять работу одновременно.
         long seconds = ThreadLocalRandom.current().nextLong(half, baseSeconds + 1);
         return Duration.ofSeconds(seconds);
     }

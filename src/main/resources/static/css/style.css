@@ -298,6 +298,30 @@ section.auth-shell {
     font-weight: 600;
 }
 
+.auth-message {
+    margin: 0 0 1.15rem;
+    padding: .8rem 1rem;
+    border: 2px solid var(--auth-berry-dark);
+    border-radius: 16px;
+    box-shadow: 0 4px 0 rgba(112, 45, 80, .13);
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.auth-message[hidden] {
+    display: none;
+}
+
+.auth-message--success {
+    color: #285e4a;
+    background: var(--auth-mint);
+}
+
+.auth-message--error {
+    color: var(--auth-berry-dark);
+    background: var(--auth-blush);
+}
+
 form.auth-form {
     width: 100%;
     display: flex;
@@ -378,6 +402,12 @@ form.auth-form {
 .auth-submit:active {
     box-shadow: 0 1px 0 var(--auth-berry-dark);
     transform: translateY(4px);
+}
+
+.auth-submit:disabled {
+    cursor: wait;
+    opacity: .65;
+    transform: none;
 }
 
 .register {

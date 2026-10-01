@@ -12,7 +12,7 @@
         return body;
     }
 
-    /** Загружает выбранные картинки заранее и возвращает их готовые UUID для письма. */
+
     window.createLetterImageManager = function createLetterImageManager(options = {}) {
         const input = document.getElementById(options.inputId || 'letterImages');
         const list = document.getElementById(options.listId || 'letterImageList');
@@ -160,7 +160,6 @@
             item.dataset.cancelled = 'true';
             item.remove();
 
-            // Уже прикреплённые изображения удалит транзакция обновления письма.
             if (item.dataset.existing !== 'true') {
                 cancelUploaded(item.dataset.imageId);
             }

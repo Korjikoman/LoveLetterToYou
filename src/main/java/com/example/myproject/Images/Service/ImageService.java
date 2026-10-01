@@ -26,7 +26,7 @@ import com.example.myproject.Images.DTO.InspectedImage;
 
 @Service
 public class ImageService {
-    private final ImageInspector imageInspector;
+    private final ImageInspectionExecutor inspectionExecutor;
     private final ImageTransactionService transactions;
     private final FileStorage fileStorage;
     private final long maxBytes;
@@ -34,16 +34,16 @@ public class ImageService {
     public ImageService(
         FileStorage fileStorage,
         @Value("${app.images.max-bytes:10485760}") long maxBytes,
-        ImageInspector imageInspector,
+        ImageInspectionExecutor inspectionExecutor,
         ImageTransactionService transactions
     ) {
         this.fileStorage = fileStorage;
         this.maxBytes = maxBytes;
-        this.imageInspector = imageInspector;
+        this.inspectionExecutor = inspectionExecutor;
         this.transactions = transactions;
     }
 
-    /** Регистрирует загрузку, проверяет файл и ставит его перенос в очередь. */
+
     @Transactional(propagation = Propagation.NEVER)
     public ImageUploadResponse upload(
         String email,
@@ -51,7 +51,9 @@ public class ImageService {
         MultipartFile file
     ) {
         validateRequest(email, purpose, file);
-        ImageMetadata metadata = transactions.registerUpload(email, purpose);
+
+
+        ImageMetadata metadata = transactions.registerUpload(email, purpose, file.getSize());
 
         try {
             StoredFileInfo stored;
@@ -60,7 +62,7 @@ public class ImageService {
             }
 
             Resource staged = fileStorage.loadAsResource(metadata.tempRelPath());
-            InspectedImage inspected = imageInspector.inspect(staged);
+            InspectedImage inspected = inspectionExecutor.inspect(staged);
             transactions.markStagedAndQueuePromotion(
                 metadata.imageId(), email, stored, inspected
             );

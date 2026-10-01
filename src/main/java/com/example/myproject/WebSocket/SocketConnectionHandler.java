@@ -1,135 +1,155 @@
 package com.example.myproject.WebSocket;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import com.example.myproject.Model.MyAppUser;
-import com.example.myproject.Repositories.MyAppUserRepository;
-import com.example.myproject.Repositories.RedisRepository;
+
 
 import jakarta.annotation.PreDestroy;
 import tools.jackson.databind.ObjectMapper;
-
 @Component
 public class SocketConnectionHandler extends TextWebSocketHandler {
-    List<WebSocketSession> webSocketSessions = Collections.synchronizedList(new ArrayList<>());
-    
-    private boolean shutdown = false;
-    private RedisRepository redisRepository;
-    
-    private MyAppUserRepository myAppUserRepository;
+    private final ConcurrentMap<String, ClientConnection> connections =
+        new ConcurrentHashMap<>();
+    private static final Logger log =
+        LoggerFactory.getLogger(SocketConnectionHandler.class);
+    private final AtomicBoolean broadcastScheduled = new AtomicBoolean();
 
-    public SocketConnectionHandler(RedisRepository redisRepository, MyAppUserRepository myAppUserRepository){
-        this.redisRepository = redisRepository;
-        this.myAppUserRepository = myAppUserRepository;
+    private final PresenceService presence;
+    private final ObjectMapper objectMapper;
+    private final ExecutorService sendExecutor;
+    private final WebSocketBroadcastScheduler scheduler;
+
+    public SocketConnectionHandler(
+        PresenceService presence,
+        ObjectMapper objectMapper,
+        ExecutorService webSocketSendExecutor,
+        WebSocketBroadcastScheduler webSocketBroadcastScheduler
+    ) {
+        this.presence = presence;
+        this.objectMapper = objectMapper;
+        this.sendExecutor = webSocketSendExecutor;
+        this.scheduler = webSocketBroadcastScheduler;
+    }
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session)
+        throws Exception {
+
+        String email = String.valueOf(session.getAttributes().get("email"));
+
+        if (email.isBlank() || "null".equals(email)) {
+            session.close(CloseStatus.NOT_ACCEPTABLE);
+            return;
+        }
+
+        WebSocketSession safeSession =
+            new ConcurrentWebSocketSessionDecorator(
+                session,
+                5_000,
+                64 * 1024
+            );
+
+        ClientConnection connection = new ClientConnection(
+            email,
+            safeSession,
+            sendExecutor,
+            () -> removeConnection(session.getId())
+        );
+
+        connections.put(session.getId(), connection);
+        presence.heartbeatOnline(email);
+        scheduleBroadcast();
+    }
+
+    @Override
+    protected void handleTextMessage(
+        WebSocketSession session,
+        TextMessage message
+    ) {
+        ClientConnection connection = connections.get(session.getId());
+        if (connection == null) return;
+
+        switch (message.getPayload()) {
+            case "heartbeat" ->
+                presence.heartbeatOnline(connection.email());
+
+            case "writing" ->
+                presence.heartbeatWriting(connection.email());
+
+            default -> {
+                return;
+            }
+        }
+
+        scheduleBroadcast();
+    }
+
+    @Override
+    public void afterConnectionClosed(
+        WebSocketSession session,
+        CloseStatus status
+    ) {
+        removeConnection(session.getId());
+    }
+
+    @Override
+    public void handleTransportError(
+        WebSocketSession session,
+        Throwable exception
+    ) {
+        removeConnection(session.getId());
+    }
+
+    private void removeConnection(String sessionId) {
+        ClientConnection connection = connections.remove(sessionId);
+
+        if (connection != null) {
+            connection.close();
+            scheduleBroadcast();
+        }
+    }
+
+    private void scheduleBroadcast() {
+        if (!broadcastScheduled.compareAndSet(false, true)) return;
+
+        scheduler.schedule(() -> {
+            broadcastScheduled.set(false);
+            broadcast();
+        }, 200, TimeUnit.MILLISECONDS);
+    }
+
+    private void broadcast() {
+        try {
+            PresenceService.Snapshot snapshot = presence.snapshot();
+
+            String json = objectMapper.writeValueAsString(Map.of(
+                "usersOnline", snapshot.usersOnline(),
+                "usersWritingLetter", snapshot.usersWritingLetter()
+            ));
+
+            TextMessage message = new TextMessage(json);
+            connections.values().forEach(c -> c.offer(message));
+        } catch (Exception exception) {
+            log.error("Failed to broadcast WebSocket presence update", exception);
+        }
     }
 
     @PreDestroy
-    public void isShuttingDown(){
-        shutdown = true;
+    public void shutdown() {
+        connections.values().forEach(ClientConnection::close);
+        connections.clear();
     }
-
-
-    // метод подключения 
-    @Override 
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception{
-        super.afterConnectionEstablished(session);
-
-
-
-        redisRepository.setUserOnline(getEmail(session), true);
-        
-        String username = getUsername(session);
-        
-        System.out.println(session.getId() + " connected.");
-       
-        webSocketSessions.add(session);
-
-        sendMessage(username);
-
-        
-    }
-
-    // метод отключения 
-    @Override 
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        super.afterConnectionClosed(session, status);
-
-        if (shutdown) return;
-        String username = getUsername(session);
-
-        redisRepository.setUserOnline(getEmail(session), false);
-        redisRepository.setUserWritingLetter(getEmail(session), false);
-        System.out.println(session.getId() + " disconnected.");
-        webSocketSessions.remove(session);
-        sendMessage(username);
-
-    }
-
-    private String getEmail(WebSocketSession session){
-        Object email = session.getAttributes().get("email");
-        if (email != null){
-            return email.toString();
-        }   
-        else{
-            return "";
-        }
-    }
-
-    private String getUsername(WebSocketSession session) {
-    if (session.getPrincipal() != null) {
-        String email = session.getPrincipal().getName();
-        MyAppUser user = myAppUserRepository.findByEmail(email).get();
-        
-        return user.getUsername();
-    }
-    return "";
-}
-
-
-    
-
-
-    private void sendMessage(String username){
-        long couter = redisRepository.countOnlineUsers();
-        long couterW = redisRepository.countWritingLetterUsers();
-
-        System.out.printf("Users online: %d \nUsers that are writing letter rn: %d\n", couter, couterW);
-
-        Map<Object, Object> msg = new HashMap<>();
-        msg.put("usersOnline", couter);
-        msg.put("usersWritingLetter", couterW);
-        msg.put("username", username);
-
-
-        // преобразование в json
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json_message = objectMapper.writeValueAsString(msg);
-                
-
-        TextMessage message = new TextMessage(json_message);
-        synchronized (webSocketSessions){
-            for (WebSocketSession s: webSocketSessions){
-                try{
-                    s.sendMessage(message);
-                }catch (Exception e){
-                    System.err.println("NIGGAAAAA " + s);
-                    System.err.println("Ошибка: " + e);
-                }
-            }
-        }
-    }
-  
 }

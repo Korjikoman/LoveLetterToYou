@@ -34,7 +34,7 @@
                 <p class="avatar-caption">Your cutest side</p>
                 <label class="avatar-upload" for="avatarInput">
                     <span aria-hidden="true">📷</span> Choose a new photo
-                    <input type="file" id="avatarInput" accept="image/*">
+                    <input type="file" id="avatarInput" accept="image/jpeg,image/png">
                 </label>
             </div>
 
@@ -43,7 +43,12 @@
 
                 <div class="field">
                     <label for="usernameInput">Username</label>
-                    <input id="usernameInput" type="text" th:value="${username}" autocomplete="username">
+                    <input id="usernameInput"
+                           type="text"
+                           th:value="${username}"
+                           autocomplete="username"
+                           minlength="2"
+                           maxlength="100">
                 </div>
 
                 <div class="field">
@@ -54,7 +59,12 @@
 
                 <div class="field">
                     <label for="passwordInput">New password</label>
-                    <input id="passwordInput" type="password" placeholder="Leave blank to keep your current one" autocomplete="new-password">
+                    <input id="passwordInput"
+                           type="password"
+                           placeholder="Leave blank to keep your current one"
+                           autocomplete="new-password"
+                           minlength="8"
+                           maxlength="72">
                     <div id="passwordWarning" class="password-warning">
                         После сохранения новый пароль начнёт действовать сразу.
                     </div>

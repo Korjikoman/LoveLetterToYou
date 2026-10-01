@@ -7,5 +7,5 @@ public interface ActiveLetterRef {
     String getPublicToken();
     long getVersion();
     Instant getExpiresAt();
-    
+
 }

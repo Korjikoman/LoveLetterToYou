@@ -32,9 +32,11 @@
                         name="title"
                         class="letter-title"
                         placeholder="For the one who makes me smile…"
-                        maxlength="120"
+                        maxlength="150"
+                        aria-describedby="letterTitleCount"
                         autocomplete="off"
                         required>
+                    <span id="letterTitleCount" class="label-note">0 / 150</span>
                 </div>
 
                 <div class="form-group">
@@ -46,7 +48,10 @@
                         id="letterContent"
                         name="content"
                         placeholder="My dearest love, 💕&#10;&#10;Today I want to tell you...&#10;&#10;With all my heart,"
+                        maxlength="1000"
+                        aria-describedby="letterContentCount"
                         required></textarea>
+                    <span id="letterContentCount" class="label-note">0 / 1000</span>
                 </div>
 
                 <div class="form-group image-upload-panel">
@@ -93,9 +98,23 @@
         let letterTTL = 60;
         const livingTimeSlider = document.getElementById('livingTime');
         const livingTimeValue = document.getElementById('livingTimeValue');
+        const letterTitleInput = document.getElementById('letterTitle');
+        const letterContentInput = document.getElementById('letterContent');
+        const letterTitleCount = document.getElementById('letterTitleCount');
+        const letterContentCount = document.getElementById('letterContentCount');
         const imageManager = createLetterImageManager();
 
-        // Слайдер
+        const updateCharacterCounts = () => {
+            letterTitleCount.textContent =
+                `${letterTitleInput.value.length} / ${letterTitleInput.maxLength}`;
+            letterContentCount.textContent =
+                `${letterContentInput.value.length} / ${letterContentInput.maxLength}`;
+        };
+
+        letterTitleInput.addEventListener('input', updateCharacterCounts);
+        letterContentInput.addEventListener('input', updateCharacterCounts);
+        updateCharacterCounts();
+
         livingTimeSlider.addEventListener('input', () => {
             livingTimeValue.textContent = livingTimeSlider.value;
             letterTTL = Number(livingTimeSlider.value);
@@ -104,9 +123,13 @@
         const createLetterButton = document.getElementById("createButtonSendLoveLetter");
 
         createLetterButton.addEventListener('click', async () => {
-            const letterContent = document.getElementById('letterContent');
-            const letterText = letterContent.value.trim();
-            const title = document.getElementById('letterTitle').value.trim();
+            if (!letterTitleInput.reportValidity()
+                || !letterContentInput.reportValidity()) {
+                return;
+            }
+
+            const letterText = letterContentInput.value.trim();
+            const title = letterTitleInput.value.trim();
             if (!title || !letterText) {
                 alert('Заполните название и текст письма');
                 return;
@@ -119,7 +142,6 @@
                     letterTitle: title,
                     letterText,
                     ttl: letterTTL,
-                    burn_after_opening: false,
                     font: null,
                     reactions: [],
                     imageIds: imageManager.getImageIds()
@@ -155,12 +177,15 @@
             document.getElementById('letterSecurityKey').value = securityKey;
         }
 
-        setInterval(() => {
-            csrfFetch("/api/letter/heartbeat-writing-letter", {method : "POST"});
-        }, 5000);
+        const sendWritingHeartbeat = () => {
+            window.sendPresence?.("writing");
+        };
+
+        window.addEventListener("presence-connected", sendWritingHeartbeat);
+        sendWritingHeartbeat();
+        setInterval(sendWritingHeartbeat, 20000);
     </script>
     <script>
-        // Keeps the dynamically loaded share dialog comfortable for keyboard users.
         function enableShareDialogKeyboardSupport() {
             let returnFocusTarget = null;
 

@@ -19,7 +19,9 @@ import com.example.myproject.Images.DTO.ImageMetadata;
 import com.example.myproject.Images.DTO.ImagePurpose;
 import com.example.myproject.Images.DTO.ImageStatus;
 import com.example.myproject.Images.DTO.InspectedImage;
+import com.example.myproject.Images.Exception.ImageQuotaExceededException;
 import com.example.myproject.Images.Model.Image;
+import com.example.myproject.Images.Repository.ImageQuotaLockRepository;
 import com.example.myproject.Images.Repository.ImageRepository;
 import com.example.myproject.Model.MyAppUser;
 import com.example.myproject.Outbox.Model.OutboxEvent;
@@ -33,27 +35,52 @@ public class ImageTransactionService {
     private final Duration uploadTimeout;
     private final Clock clock;
     private final ImageRepository imageRepository;
+    private final long userQuotaBytes;
+    private final long globalQuotaBytes;
+
+    private static final short GLOBAL_QUOTA_LOCK_ID = 1;
+
+    private final ImageQuotaLockRepository quotaLockRepository;
 
     public ImageTransactionService(
         MyAppUserRepository userRepository,
         Clock clock,
         ImageRepository imageRepository,
         @Value("${app.images.upload-timeout:PT15M}") Duration uploadTimeout,
-        OutboxEventRepository outboxRepository
+        OutboxEventRepository outboxRepository, @Value("${app.images.user-quota-bytes:104857600}")
+        long userQuotaBytes, @Value("${app.images.global-quota-bytes:21474836480}")
+        long globalQuotaBytes, ImageQuotaLockRepository quotaLockRepository
     ) {
         this.userRepository = userRepository;
         this.imageRepository = imageRepository;
         this.clock = clock;
         this.uploadTimeout = uploadTimeout;
         this.outboxRepository = outboxRepository;
+        this.userQuotaBytes = userQuotaBytes;
+        this.globalQuotaBytes = globalQuotaBytes;
+        this.quotaLockRepository = quotaLockRepository;
     }
 
-    /** Создаёт короткую запись о начавшейся загрузке. */
+
     @Transactional
-    public ImageMetadata registerUpload(String email, ImagePurpose purpose) {
+    public ImageMetadata registerUpload(String email, ImagePurpose purpose, long reservedBytes) {
         MyAppUser user = userRepository.findByEmail(email)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        quotaLockRepository.findForUpdate(GLOBAL_QUOTA_LOCK_ID)
+            .orElseThrow(() -> new IllegalStateException(
+                "Image quota lock is missing"
+            ));
+        long userUsed = imageRepository.sumReservedBytesByUser(email);
+        long globalUsed = imageRepository.sumReservedBytesGlobal();
+
+        if (userUsed > userQuotaBytes - reservedBytes) {
+            throw new ImageQuotaExceededException("User image quota exceeded");
+        }
+
+        if (globalUsed > globalQuotaBytes - reservedBytes) {
+            throw new ImageQuotaExceededException("Global image quota exceeded");
+        }
         UUID imageId = UUID.randomUUID();
         Instant now = clock.instant();
         Instant expiresAt = now.plus(uploadTimeout);
@@ -61,13 +88,13 @@ public class ImageTransactionService {
         String tempPath = "temp/images/" + imageId;
 
         Image image = Image.upload(
-            imageId, user, purpose, tempPath, mainPath, now, expiresAt
+            imageId, user, purpose, tempPath, mainPath, now, expiresAt, reservedBytes
         );
         imageRepository.save(image);
         return new ImageMetadata(imageId, tempPath, mainPath, expiresAt);
     }
 
-    /** Фиксирует проверенный файл и атомарно создаёт событие переноса. */
+
     @Transactional
     public void markStagedAndQueuePromotion(
         UUID imageId,
@@ -95,7 +122,7 @@ public class ImageTransactionService {
         outboxRepository.save(OutboxEvent.promoteImage(image, now));
     }
 
-    /** Отменяет только ещё не прикреплённое изображение. */
+
     @Transactional
     public void cancelUnattached(UUID imageId, String email) {
         Image image = imageRepository.findOwnedForUpdate(imageId, email).orElse(null);
@@ -117,7 +144,7 @@ public class ImageTransactionService {
         }
     }
 
-    /** Блокирует готовое изображение перед привязкой к объекту. */
+
     @Transactional(propagation = Propagation.MANDATORY)
     public Image requireReadyForAttachment(
         UUID imageId,
@@ -137,7 +164,7 @@ public class ImageTransactionService {
         return image;
     }
 
-    /** Ставит удаление отвязанного изображения в ту же транзакцию. */
+
     @Transactional(propagation = Propagation.MANDATORY)
     public void queueAttachedDeletion(UUID imageId, String email) {
         Image image = imageRepository.findOwnedForUpdate(imageId, email)
@@ -152,7 +179,7 @@ public class ImageTransactionService {
         }
     }
 
-    /** Находит брошенные загрузки и ставит их удаление в очередь. */
+
     @Transactional
     public int queueExpired(int limit) {
         Instant now = clock.instant();

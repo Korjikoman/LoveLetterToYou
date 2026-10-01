@@ -30,7 +30,6 @@ public class LetterMapper {
             letter.title(),
             letter.text(),
             letter.expiresAt(),
-            letter.burnAfterOpening(),
             copyList(letter.images()),
             copyList(letter.reactions()),
             letter.fontSettings()
@@ -55,15 +54,14 @@ public class LetterMapper {
             letter.getText(),
             letter.getExpiresAt(),
             letter.getVersion(),
-            letter.isBurnAfterOpening(),
             toImageViews(letter),
             copyList(letter.getReactions()),
             letter.getFont()
         );
-        
+
     }
 
-    /** Отбирает готовые изображения письма и сохраняет заданный порядок. */
+
     private List<ImageView> toImageViews(Letter letter) {
         if (letter.getImageLinks() == null || letter.getImageLinks().isEmpty()) {
             return List.of();
@@ -87,6 +85,6 @@ public class LetterMapper {
         return source == null ? List.of() : List.copyOf(source);
     }
 
-    
+
 
 }

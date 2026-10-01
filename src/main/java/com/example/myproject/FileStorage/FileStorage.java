@@ -15,4 +15,5 @@ public interface FileStorage {
         throws IOException;
 
     boolean deleteFile(String relativePath) throws IOException;
+
 }

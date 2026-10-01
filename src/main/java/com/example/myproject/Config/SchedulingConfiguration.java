@@ -1,17 +1,22 @@
 package com.example.myproject.Config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @Configuration
 @EnableScheduling
 public class SchedulingConfiguration {
-    
+    @Bean
+    public TaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(4);
+        scheduler.setThreadNamePrefix("app-scheduler-");
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        scheduler.setAwaitTerminationSeconds(20);
+        scheduler.initialize();
+        return scheduler;
+    }
 }
-// 1. Запускается MyprojectApplication.main()
-// 2. Spring создаёт OutboxBatchProcessor как @Service
-// 3. Spring находит метод с @Scheduled
-// 4. Регистрирует его во внутреннем планировщике
-// 5. Планировщик автоматически вызывает processBatch()
-// 6. После завершения ждёт OUTBOX_POLL_DELAY_MS мс
-// 7. Вызывает снова

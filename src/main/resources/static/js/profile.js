@@ -2,10 +2,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const avatarImg = document.getElementById("avatarImage");
     const avatarInput = document.getElementById("avatarInput");
     const passwordInput = document.getElementById("passwordInput");
+    const usernameInput = document.getElementById("usernameInput");
     const passwordWarning = document.getElementById("passwordWarning");
     const applyBtn = document.getElementById("applyBtn");
 
-    // Avatar init
     const hasAvatar = avatarImg.dataset.hasAvatar === "true";
     const avatarPath = avatarImg.dataset.avatarPath;
 
@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ? avatarPath
         : "/images/default-avatar-icon.jpg";
 
-    // Avatar preview
     avatarInput.addEventListener("change", () => {
         const file = avatarInput.files[0];
         if (file) {
@@ -21,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Password warning
     passwordInput.addEventListener("focus", () => {
         passwordWarning.classList.add("visible");
     });
@@ -32,13 +30,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Сохраняем данные профиля и аватар отдельными согласованными запросами.
     applyBtn.addEventListener("click", async () => {
         applyBtn.disabled = true;
         let unattachedImageId = null;
 
         try {
-            const username = document.getElementById("usernameInput").value.trim();
+            if (!usernameInput.reportValidity()
+                || !passwordInput.reportValidity()) {
+                return;
+            }
+
+            const username = usernameInput.value.trim();
             const password = passwordInput.value;
             const avatarFile = avatarInput.files[0];
 
@@ -117,7 +119,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // showToast logic
 
     function showToast(message, isError = false) {
         const toast = document.getElementById("toast");

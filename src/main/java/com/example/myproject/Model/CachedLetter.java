@@ -15,7 +15,6 @@ public record CachedLetter(
     String text,
     Instant expiresAt,
     Long version,
-    Boolean burnAfterOpening,
     List<ImageView> images,
     List<String> reactions,
     FontData fontSettings

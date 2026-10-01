@@ -14,7 +14,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  
+
   redis:
     image: redis:7-alpine
     ports:
@@ -26,20 +26,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  
+
   app_1:
     build:
       context: .
       dockerfile: Dockerfile
     expose:
       - "8080"
-    depends_on:  
+    depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       MAIN_HOST: 0.0.0.0
       MAIN_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
@@ -53,7 +52,7 @@ services:
     volumes:
       - media_data:/data/media
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/req/login || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/actuator/health/readiness || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12

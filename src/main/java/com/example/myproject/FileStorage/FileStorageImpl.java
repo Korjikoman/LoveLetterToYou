@@ -18,17 +18,26 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 
+import com.example.myproject.FileStorage.Exception.StorageCapacityException;
+
 @Service
 public class FileStorageImpl implements FileStorage {
     private final Path root;
+    private final long minFreeDiskBytes;
+    private static final int IO_BUFFER_SIZE_BYTES = 8192;
+    private final AtomicLong reservedUploadBytes = new AtomicLong();
 
-    public FileStorageImpl(@Value("${app.storage.root:./data/storage}") String root) {
+    public FileStorageImpl(@Value("${app.storage.root:./data/storage}") String root,@Value("${app.images.min-free-disk-bytes:1073741824}")
+    long minFreeDiskBytes) {
+
+        this.minFreeDiskBytes = minFreeDiskBytes;
         try {
             this.root = Paths.get(root).toAbsolutePath().normalize();
             Files.createDirectories(this.root);
@@ -36,14 +45,31 @@ public class FileStorageImpl implements FileStorage {
             throw new UncheckedIOException("Cannot initialize storage", exception);
         }
     }
+    private void reserveUploadSpace(long bytes) throws IOException {
+        while (true) {
+            long reserved = reservedUploadBytes.get();
+            long usable = Files.getFileStore(root).getUsableSpace();
+            long availableAboveLimit = usable - minFreeDiskBytes;
 
-    /** Записывает файл целиком и одновременно считает его контрольную сумму. */
+            if (availableAboveLimit < bytes
+                || reserved > availableAboveLimit - bytes) {
+                throw new StorageCapacityException(
+                    "Not enough free disk space"
+                );
+            }
+
+            if (reservedUploadBytes.compareAndSet(reserved, reserved + bytes)) {
+                return;
+            }
+        }
+    }
+
+    private void releaseUploadSpace(long bytes) {
+        reservedUploadBytes.addAndGet(-bytes);
+    }
+
     @Override
-    public StoredFileInfo store(
-        String relativePath,
-        InputStream input,
-        long maxBytes
-    ) throws IOException {
+    public StoredFileInfo store(String relativePath,InputStream input,long maxBytes) throws IOException {
         if (input == null) {
             throw new IllegalArgumentException("Input is null");
         }
@@ -51,36 +77,55 @@ public class FileStorageImpl implements FileStorage {
             throw new IllegalArgumentException("Invalid file limit");
         }
 
-        Path target = resolveSafely(relativePath);
-        Files.createDirectories(target.getParent());
-        if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-            throw new FileAlreadyExistsException(relativePath);
-        }
-
-        Path temporary = Files.createTempFile(target.getParent(), ".upload-", ".tmp");
-        MessageDigest digest = sha256Digest();
-        long total = 0;
+        reserveUploadSpace(maxBytes);
 
         try {
-            try (
-                OutputStream raw = Files.newOutputStream(temporary);
-                DigestOutputStream output = new DigestOutputStream(raw, digest)
-            ) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = input.read(buffer)) != -1) {
-                    total += read;
-                    if (total > maxBytes) {
-                        throw new IOException("Image exceeds max size");
-                    }
-                    output.write(buffer, 0, read);
-                }
+            Path target = resolveSafely(relativePath);
+            Files.createDirectories(target.getParent());
+
+            if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
+                throw new FileAlreadyExistsException(relativePath);
             }
 
-            moveWithoutReplace(temporary, target);
-            return new StoredFileInfo(total, HexFormat.of().formatHex(digest.digest()));
+            Path temporary = Files.createTempFile(
+                target.getParent(),
+                ".upload-",
+                ".tmp"
+            );
+            MessageDigest digest = sha256Digest();
+            long total = 0;
+
+            try {
+                try (
+                    OutputStream raw = Files.newOutputStream(temporary);
+                    DigestOutputStream output =
+                        new DigestOutputStream(raw, digest)
+                ) {
+                    byte[] buffer = new byte[IO_BUFFER_SIZE_BYTES];
+                    int read;
+
+                    while ((read = input.read(buffer)) != -1) {
+                        total += read;
+
+                        if (total > maxBytes) {
+                            throw new IOException("Image exceeds max size");
+                        }
+
+                        output.write(buffer, 0, read);
+                    }
+                }
+
+                moveWithoutReplace(temporary, target);
+
+                return new StoredFileInfo(
+                    total,
+                    HexFormat.of().formatHex(digest.digest())
+                );
+            } finally {
+                Files.deleteIfExists(temporary);
+            }
         } finally {
-            Files.deleteIfExists(temporary);
+            releaseUploadSpace(maxBytes);
         }
     }
 
@@ -94,7 +139,7 @@ public class FileStorageImpl implements FileStorage {
         return new UrlResource(file.toUri());
     }
 
-    /** Повторный вызов безопасен: уже перенесённый файл сверяется по сумме. */
+
     @Override
     public void replace(
         String sourcePath,
@@ -187,4 +232,6 @@ public class FileStorageImpl implements FileStorage {
         }
         return resolved;
     }
+
+
 }

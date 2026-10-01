@@ -12,10 +12,17 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record LetterData(
-    @JsonAlias("title") @NotBlank @Size(max = 200) String letterTitle,
-    @JsonAlias("text") @NotBlank @Size(max = 10_000) String letterText,
+    @JsonAlias("title")
+    @NotBlank
+    @Size(max = ValidationLimits.LETTER_TITLE_MAX_LENGTH)
+    String letterTitle,
+
+    @JsonAlias("text")
+    @NotBlank
+    @Size(max = ValidationLimits.LETTER_TEXT_MAX_LENGTH)
+    String letterText,
+
     @NotNull @Min(5) @Max(1440) Integer ttl,
-    @JsonAlias("burnAfterOpening") boolean burn_after_opening,
     FontData font,
     List<String> reactions,
     @Size(max = 10) List<UUID> imageIds

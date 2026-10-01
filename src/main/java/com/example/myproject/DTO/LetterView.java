@@ -12,7 +12,6 @@ public record LetterView (
     String title,
     String text,
     Instant expiresAt,
-    Boolean burnAfterOpening,
     List<ImageView> images,
     List<String> reactions,
     FontData font
@@ -21,5 +20,5 @@ public record LetterView (
         images = images == null ? List.of() : List.copyOf(images);
         reactions = reactions == null ? List.of() : List.copyOf(reactions);
     }
-    
+
 }

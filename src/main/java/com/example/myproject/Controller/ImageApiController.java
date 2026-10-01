@@ -37,7 +37,6 @@ public class ImageApiController {
         this.imageService = imageService;
     }
 
-    // Регистрирует загрузку и ставит перенос файла в очередь.
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ImageUploadResponse> upload(
         @RequestParam ImagePurpose purpose,
@@ -56,7 +55,6 @@ public class ImageApiController {
             .body(response);
     }
 
-    // Возвращает состояние асинхронной обработки изображения.
     @GetMapping("/{imageId}/status")
     public ResponseEntity<ImageIsReadyResponse> status(
         @PathVariable UUID imageId,
@@ -70,7 +68,6 @@ public class ImageApiController {
         return ResponseEntity.ok(response);
     }
 
-    // Отдаёт только готовый файл, принадлежащий текущему пользователю.
     @GetMapping("/{imageId}/content")
     public ResponseEntity<Resource> content(
         @PathVariable UUID imageId,
@@ -103,7 +100,6 @@ public class ImageApiController {
             .body(content.resource());
     }
 
-    // Ставит удаление файла в очередь; повторный вызов безопасен.
     @DeleteMapping("/{imageId}")
     public ResponseEntity<Void> cancel(
         @PathVariable UUID imageId,

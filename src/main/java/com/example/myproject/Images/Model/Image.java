@@ -89,17 +89,40 @@ public class Image {
         String tempRelPath,
         String mainRelPath,
         Instant now,
-        Instant uploadExpiresAt
+        Instant uploadExpiresAt,
+        long reservedBytes
     ) {
+        if (reservedBytes <= 0) {
+            throw new IllegalArgumentException("Reserved size must be positive");
+        }
+
         Image image = new Image();
         image.id = Objects.requireNonNull(id, "Image id is required");
         image.user = Objects.requireNonNull(user, "Image owner is required");
-        image.imagePurpose = Objects.requireNonNull(purpose, "Image purpose is required");
-        image.tempRelPath = requirePath(tempRelPath, "Temporary path is required");
-        image.mainRelPath = requirePath(mainRelPath, "Final path is required");
+        image.imagePurpose = Objects.requireNonNull(
+            purpose,
+            "Image purpose is required"
+        );
+        image.tempRelPath = requirePath(
+            tempRelPath,
+            "Temporary path is required"
+        );
+        image.mainRelPath = requirePath(
+            mainRelPath,
+            "Final path is required"
+        );
         image.status = ImageStatus.UPLOADING;
-        image.createdAt = Objects.requireNonNull(now, "Creation time is required");
-        image.uploadExpiresAt = Objects.requireNonNull(uploadExpiresAt, "Upload deadline is required");
+        image.createdAt = Objects.requireNonNull(
+            now,
+            "Creation time is required"
+        );
+        image.uploadExpiresAt = Objects.requireNonNull(
+            uploadExpiresAt,
+            "Upload deadline is required"
+        );
+
+        image.sizeBytes = reservedBytes;
+
         return image;
     }
 
@@ -139,7 +162,7 @@ public class Image {
         readyExpiresAt = null;
     }
 
-    /** Возвращает true, если файл уже можно удалить. */
+
     public boolean requestDeletion() {
         return switch (status) {
             case UPLOADING, READY, ATTACHED, FAILED -> {

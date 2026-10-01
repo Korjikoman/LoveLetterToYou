@@ -1,0 +1,95 @@
+spring:
+  config:
+    import: "optional:file:.env[.properties]"
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 25MB
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+
+logging:
+  level:
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+
+
+server:
+  address: ${MAIN_HOST:0.0.0.0}
+  port: ${MAIN_PORT:8080}
+  forward-headers-strategy: framework
+
+app:
+  public-url: http://${MAIN_HOST}:${MAIN_PORT}
+  images:
+    max-bytes: ${IMAGE_MAX_BYTES:10485760}
+    max-width: 4096
+    max-height: 4096
+    max-pixels: 9000000
+
+    inspection-workers: 2
+    inspection-queue-capacity: 8
+    inspection-timeout: PT20S
+
+    user-quota-bytes: 104857600
+    global-quota-bytes: 21474836480
+    min-free-disk-bytes: 1073741824
+
+    cleanup-delay-ms: 60000
+    cleanup-batch-size: 100
+    cleanup-max-duration: PT10S
+  storage:
+    root: ${IMAGES_ROOT:./data/storage}
+  outbox:
+    poll-delay-ms: ${OUTBOX_POLL_DELAY_MS:500}
+    lease-time: PT2M
+    retention: P7D
+  rate-limit:
+    idle-entry-ttl: PT15M
+    cleanup-interval: PT5M
+    login:
+      max-attempts: 5
+      window: PT1M
+    registration:
+      max-attempts: 3
+      window: PT10M
+    upload:
+      max-attempts: 20
+      window: PT1M
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,redis,diskSpace
+
+

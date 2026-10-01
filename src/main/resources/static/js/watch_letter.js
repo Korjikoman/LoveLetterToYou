@@ -82,7 +82,6 @@
         letterCard.classList.add('is-animating-text');
     };
 
-    // Убирает оболочку конверта, оставляя на экране только открытое письмо.
     const hideEnvelope = () => {
         envelope.classList.add('is-envelope-hidden');
         envelope.removeAttribute('role');

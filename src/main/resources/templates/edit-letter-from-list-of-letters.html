@@ -24,7 +24,6 @@
 
             <input type="hidden" id="publicToken" th:value="${letterPublicToken}">
             <input type="hidden" id="letterVersion" th:value="${letterVersion}">
-            <input type="hidden" id="letterBurnAfterOpening" th:value="${letterBurnAfterOpening}">
             <input type="hidden" id="fontPresent" th:value="${fontPresent}">
             <input type="hidden" id="fontBold" th:value="${fontBold}">
             <input type="hidden" id="fontCursive" th:value="${fontCursive}">
@@ -42,15 +41,20 @@
                            id="letterTitle"
                            class="letter-title"
                            th:value="${letterTitle}"
-                           maxlength="120"
+                           maxlength="150"
+                           aria-describedby="letterTitleCount"
                            required>
+                    <span id="letterTitleCount" class="label-note">0 / 150</span>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="letterContent">Your message</label>
                     <textarea id="letterContent"
+                              maxlength="1000"
+                              aria-describedby="letterContentCount"
                               required
                               th:text="${letterText}"></textarea>
+                    <span id="letterContentCount" class="label-note">0 / 1000</span>
                 </div>
 
                 <div class="form-group image-upload-panel">
@@ -113,7 +117,22 @@
     let letterTTL = Number(document.getElementById('livingTime').value);
     const livingTimeSlider = document.getElementById('livingTime');
     const livingTimeValue = document.getElementById('livingTimeValue');
+    const letterTitleInput = document.getElementById('letterTitle');
+    const letterContentInput = document.getElementById('letterContent');
+    const letterTitleCount = document.getElementById('letterTitleCount');
+    const letterContentCount = document.getElementById('letterContentCount');
     const imageManager = createLetterImageManager();
+
+    const updateCharacterCounts = () => {
+        letterTitleCount.textContent =
+            `${letterTitleInput.value.length} / ${letterTitleInput.maxLength}`;
+        letterContentCount.textContent =
+            `${letterContentInput.value.length} / ${letterContentInput.maxLength}`;
+    };
+
+    letterTitleInput.addEventListener('input', updateCharacterCounts);
+    letterContentInput.addEventListener('input', updateCharacterCounts);
+    updateCharacterCounts();
 
     livingTimeSlider.addEventListener('input', () => {
         livingTimeValue.textContent = livingTimeSlider.value;
@@ -124,12 +143,22 @@
         const button = event.currentTarget;
         button.disabled = true;
         try {
+            if (!letterTitleInput.reportValidity()
+                || !letterContentInput.reportValidity()) {
+                return;
+            }
+
+            if (!letterTitleInput.value.trim()
+                || !letterContentInput.value.trim()) {
+                showMsg('Заполните название и текст письма', 'danger');
+                return;
+            }
+
             await imageManager.waitUntilReady();
             const payload = {
-                letterTitle: document.getElementById('letterTitle').value.trim(),
-                letterText: document.getElementById('letterContent').value.trim(),
+                letterTitle: letterTitleInput.value.trim(),
+                letterText: letterContentInput.value.trim(),
                 ttl: letterTTL,
-                burn_after_opening: document.getElementById('letterBurnAfterOpening').value === 'true',
                 font: document.getElementById('fontPresent').value === 'true' ? {
                     isFontBold: document.getElementById('fontBold').value === 'true',
                     isFontCursive: document.getElementById('fontCursive').value === 'true',

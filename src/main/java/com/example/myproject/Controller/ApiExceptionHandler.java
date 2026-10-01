@@ -9,10 +9,15 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.example.myproject.Images.Exception.ImageProcessingBusyException;
+import com.example.myproject.Images.Exception.ImageProcessingTimeoutException;
+import com.example.myproject.Images.Exception.ImageQuotaExceededException;
+
 @RestControllerAdvice(assignableTypes = {
     ImageApiController.class,
     LetterController.class,
-    UsersProfileController.class
+    UsersProfileController.class,
+    RegistrationController.class
 })
 public class ApiExceptionHandler {
 
@@ -50,6 +55,28 @@ public class ApiExceptionHandler {
             : message;
 
         return ResponseEntity.status(status).body(new ApiError(safeMessage));
+    }
+
+    @ExceptionHandler(ImageProcessingBusyException.class)
+    public ResponseEntity<ApiError> imageQueueFull(
+        ImageProcessingBusyException exception
+    ) {
+        return response(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage());
+    }
+
+    @ExceptionHandler(ImageProcessingTimeoutException.class)
+    public ResponseEntity<ApiError> imageTimeout(
+        ImageProcessingTimeoutException exception
+    ) {
+        return response(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
+    }
+
+    @ExceptionHandler(ImageQuotaExceededException.class)
+    public ResponseEntity<ApiError> quotaExceeded(
+        ImageQuotaExceededException exception
+    ) {
+        return ResponseEntity.status(507)
+            .body(new ApiError(exception.getMessage()));
     }
 
     public record ApiError(String error) {}

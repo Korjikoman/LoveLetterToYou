@@ -38,7 +38,7 @@ public class OutboxLeaseService {
         this.retention = retention;
     }
 
-    /** На короткое время закрепляет события за этим обработчиком. */
+
     @Transactional
     public List<ProcessingOutboxEvent> claimBatch(int batchSize) {
         Instant now = clock.instant();

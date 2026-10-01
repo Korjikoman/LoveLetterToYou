@@ -12,7 +12,7 @@ public class FontSettings {
     private boolean underlined;
     private String family;
     private String name;
-    
+
     public FontSettings(boolean bold, boolean cursive, boolean underlined, String family, String name) {
         this.bold = bold;
         this.cursive = cursive;

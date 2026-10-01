@@ -33,6 +33,22 @@ public interface ImageRepository extends JpaRepository<Image, UUID> {
     );
 
     @Query("""
+        select coalesce(sum(image.sizeBytes), 0)
+        from Image image
+        where lower(image.user.email) = lower(:email)
+        and image.status <> com.example.myproject.Images.DTO.ImageStatus.DELETED
+        """)
+    long sumReservedBytesByUser(@Param("email") String email);
+
+    @Query("""
+        select coalesce(sum(image.sizeBytes), 0)
+        from Image image
+        where image.status <> com.example.myproject.Images.DTO.ImageStatus.DELETED
+        """)
+    long sumReservedBytesGlobal();
+
+
+    @Query("""
         select image
         from Image image
         where image.id = :id
@@ -43,7 +59,7 @@ public interface ImageRepository extends JpaRepository<Image, UUID> {
         @Param("email") String email
     );
 
-    /** Блокирует только просроченные незакреплённые изображения. */
+
     @Query(value = """
         SELECT *
         FROM image

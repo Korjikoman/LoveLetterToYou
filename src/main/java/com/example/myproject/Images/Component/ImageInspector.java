@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import com.example.myproject.Images.DTO.InspectedImage;
 
 
-@Component 
+@Component
 public class ImageInspector {
     private final int maxWidth;
     private final int maxHeight;
@@ -35,10 +35,10 @@ public class ImageInspector {
 
     public InspectedImage inspect(Resource resource) throws IOException {
         try (InputStream raw =resource.getInputStream();
-            ImageInputStream inputStream = ImageIO.createImageInputStream(raw) 
+            ImageInputStream inputStream = ImageIO.createImageInputStream(raw)
         ) {
             if (inputStream == null) {
-                throw new IllegalArgumentException("Invalid Image"); 
+                throw new IllegalArgumentException("Invalid Image");
             }
 
             Iterator<ImageReader> readers = ImageIO.getImageReaders(inputStream);
@@ -50,7 +50,7 @@ public class ImageInspector {
 
             try {
                 reader.setInput(inputStream, true, true);
-                String format = reader.getFormatName().toLowerCase(Locale.ROOT); 
+                String format = reader.getFormatName().toLowerCase(Locale.ROOT);
 
                 String contentType = switch (format) {
                     case "jpeg", "jpg" -> "image/jpeg";
@@ -67,7 +67,6 @@ public class ImageInspector {
                         "Invalid image dimensions"
                     );
                 }
-                // Полное чтение отбрасывает повреждённые файлы.
                 BufferedImage decoded = reader.read(0);
                 if (decoded == null) {
                     throw new IllegalArgumentException("Cannot decode image");

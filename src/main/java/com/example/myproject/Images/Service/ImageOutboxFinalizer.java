@@ -36,7 +36,7 @@ public class ImageOutboxFinalizer {
         this.readyTimeout = readyTimeout;
     }
 
-    /** Завершает перенос файла и обработку события одной транзакцией. */
+
     @Transactional
     public boolean finishPromotion(ProcessingOutboxEvent claimed) {
         OutboxEvent event = requireClaim(claimed, OutboxEventType.IMAGE_PROMOTE);
@@ -62,7 +62,6 @@ public class ImageOutboxFinalizer {
                 outboxRepository.save(OutboxEvent.deleteImage(image, now, now));
             }
             case READY, ATTACHED -> {
-                // Повтор после уже завершённого переноса безопасен.
             }
             default -> throw new IllegalStateException(
                 "Cannot finish promotion from " + image.getStatus()
@@ -73,7 +72,7 @@ public class ImageOutboxFinalizer {
         return true;
     }
 
-    /** Завершает физическое и логическое удаление одной транзакцией. */
+
     @Transactional
     public boolean finishDeletion(ProcessingOutboxEvent claimed) {
         OutboxEvent event = requireClaim(claimed, OutboxEventType.IMAGE_DELETE);

@@ -25,7 +25,7 @@ public class ProfileImageService {
         this.imageTransactions = imageTransactions;
     }
 
-    /** Атомарно меняет ссылку на аватар и ставит старый файл на удаление. */
+
     @Transactional
     public ImageView setAvatar(String email, UUID imageId) {
         MyAppUser user = lockUser(email);

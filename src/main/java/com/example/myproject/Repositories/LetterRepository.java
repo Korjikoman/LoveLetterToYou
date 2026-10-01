@@ -29,15 +29,13 @@ public interface LetterRepository extends JpaRepository <Letter, Long>{
 
     Optional<Letter> findByPublicTokenAndExpiresAtAfter(String publicToken, Instant now);
     List<Letter> findAllByUser_EmailAndExpiresAtAfterOrderByIdDesc(String email,Instant now);
-    boolean existsByPublicToken(String publicToken);
-
     @Query("""
         SELECT l
         FROM Letter l
         WHERE l.expiresAt > :now
         ORDER BY l.id DESC
     """)
-    List<Letter> findRecentActiveForTemplate(@Param("now") Instant now, Pageable pageable);
+    List<Letter> findRecentDisplayFragments(@Param("now") Instant now, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query(
@@ -59,10 +57,42 @@ public interface LetterRepository extends JpaRepository <Letter, Long>{
         WHERE lower(l.user.email) = lower(:email)
             AND l.expiresAt > :now
             AND (:beforeId IS null OR l.id < :beforeId)
-        ORDER BY l.id DESC        
+        ORDER BY l.id DESC
         """
     )
     List<ActiveLetterRef> findActiveLetterRefs(@Param("email") String email, @Param("now") Instant now, @Param("beforeId") Long beforeId, Pageable pageable);
+
+    @Query("""
+        SELECT l.id as id,
+            l.publicToken as publicToken,
+            l.version as version,
+            l.expiresAt as expiresAt
+        FROM Letter l
+        WHERE l.publicToken = :token
+            AND lower(l.authorEmail) = lower(:email)
+            AND l.expiresAt > :now
+        """)
+    Optional<ActiveLetterRef> findActiveLetterRefForAuthor(
+        @Param("token") String publicToken,
+        @Param("email") String email,
+        @Param("now") Instant now
+    );
+
+    @Query("""
+        SELECT l.id as id,
+            l.publicToken as publicToken,
+            l.version as version,
+            l.expiresAt as expiresAt
+        FROM Letter l
+        WHERE l.publicToken = :token
+            AND l.securityKey = :securityKey
+            AND l.expiresAt > :now
+        """)
+    Optional<ActiveLetterRef> findActiveLetterRefForAnonymous(
+        @Param("token") String publicToken,
+        @Param("securityKey") String securityKey,
+        @Param("now") Instant now
+    );
 
     @EntityGraph(attributePaths = {"user", "imageLinks", "imageLinks.image"})
     @Query("""

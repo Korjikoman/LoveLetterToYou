@@ -413,7 +413,7 @@ a {
     box-shadow: 0 5px 0 #7c2737, 0 14px 30px rgba(75, 39, 59, .2);
 }
 
-/* Home page */
+
 .welcome-stage {
     width: min(1100px, 100%);
     min-height: min(620px, calc(100vh - 310px));

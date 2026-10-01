@@ -22,6 +22,9 @@ import com.example.myproject.Services.ProfileImageService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import com.example.myproject.DTO.ValidationLimits;
 
 @Controller
 @RequestMapping("/profile")
@@ -60,7 +63,7 @@ public class UsersProfileController {
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<UserProfileView> updateProfile(
-        @RequestBody ProfileUpdateRequest request,
+        @Valid @RequestBody ProfileUpdateRequest request,
         Authentication authentication
     ) {
         UserProfileView profile = userService.updateProfile(
@@ -72,7 +75,6 @@ public class UsersProfileController {
         return ResponseEntity.ok(profile);
     }
 
-    // Прикрепляет к профилю уже готовое изображение.
     @PutMapping(
         value = "/api/avatar",
         consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -90,7 +92,6 @@ public class UsersProfileController {
         return ResponseEntity.ok(avatar);
     }
 
-    // Отвязывает аватар, а удаление файла выполняется в фоне.
     @DeleteMapping("/api/avatar")
     public ResponseEntity<Void> deleteAvatar(Authentication authentication) {
         profileImageService.deleteAvatar(requireEmail(authentication));
@@ -111,7 +112,16 @@ public class UsersProfileController {
     }
 
     public record ProfileUpdateRequest(
+        @Size(
+            min = ValidationLimits.USERNAME_MIN_LENGTH,
+            max = ValidationLimits.USERNAME_MAX_LENGTH
+        )
         String username,
+
+        @Size(
+            min = ValidationLimits.PASSWORD_MIN_LENGTH,
+            max = ValidationLimits.PASSWORD_MAX_LENGTH
+        )
         String password
     ) {}
 

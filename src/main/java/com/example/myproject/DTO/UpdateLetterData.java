@@ -14,11 +14,11 @@ import jakarta.validation.constraints.Size;
 public record UpdateLetterData (
 
     @NotBlank
-    @Size(max=200)
+    @Size(max = ValidationLimits.LETTER_TITLE_MAX_LENGTH)
     @JsonAlias("title") String letterTitle,
 
     @NotBlank
-    @Size(max=10000)
+    @Size(max = ValidationLimits.LETTER_TEXT_MAX_LENGTH)
     @JsonAlias("text") String letterText,
 
     @NotNull
@@ -26,7 +26,6 @@ public record UpdateLetterData (
     @Max(1440)
     Integer ttl,
 
-    @JsonAlias("burnAfterOpening") boolean burn_after_opening,
     FontData font,
     List<String> reactions,
 

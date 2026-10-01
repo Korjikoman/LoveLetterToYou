@@ -8,4 +8,4 @@ public record CreateLetterResponse (
     List<String> images,
     String error
 ){}
-    
+

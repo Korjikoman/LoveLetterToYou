@@ -54,16 +54,6 @@ public class ListLettersController {
         return "list-of-letters";
     }
 
-    // УЯЗВИМЫЙ КОНТРОЛЛЕР - отладочный эндпоинт для доступа к базе данных
-    // @GetMapping("/debug/redis-data")
-    // @ResponseBody
-    // public Map<Object, Object> debugRedisData(@RequestHeader(value = "X-Debug-Token", required = false) String debugToken) {
-    //     // Проверка токена для безопасности
-    //     if (debugToken != null && debugToken.equals("")) {
-    //         return redisRepository.dumpTestData();
-    //     }
-    //     return Map.of("error", "Unauthorized access");
-    // }
 
     @GetMapping(value = "/api/heartbeat-style", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -76,6 +66,6 @@ public class ListLettersController {
 
         return redisRepository.dumpTestData();
     }
-    
-    
+
+
 }

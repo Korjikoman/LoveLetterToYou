@@ -11,7 +11,7 @@ import com.example.myproject.DTO.GenPair;
 public class PublicToken {
     private static final String TOKEN_ALPHABET = "qazwsxedcrfvtgbyhnujmikolpQAZWSXEDCRFVTGBYHNUJMIKOLP1234567890";
     private static final String KEY_ALPHABET = "qazwsxedcrfvtgbyhnujmikolpQAZWSXEDCRFVTGBYHNUJMIKOLP1234567890!@#$%&*()_+?.,<>";
-    private static final int MAX_TOKEN_LENGTH = 32; 
+    private static final int MAX_TOKEN_LENGTH = 32;
     private static final int MIN_TOKEN_LENGTH = 16;
     private static final int KEY_LENGTH = 32;
 

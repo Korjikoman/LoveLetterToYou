@@ -16,7 +16,7 @@ public class ImageMapper {
     private static final String CONTENT_URL_PREFIX = "/api/images/";
     private static final String CONTENT_URL_SUFFIX = "/content";
 
-    /** Возвращает true, только если изображение уже прикреплено к письму. */
+
     public boolean isVisibleLetterImage(LetterImage link) {
         if (link == null || link.getImage() == null) {
             return false;
@@ -27,7 +27,7 @@ public class ImageMapper {
             && image.getImagePurpose() == ImagePurpose.LETTER;
     }
 
-    /** Создаёт безопасное представление изображения без сущностей JPA. */
+
     public ImageView toView(LetterImage link) {
         Objects.requireNonNull(link, "Связь изображения с письмом не указана");
 

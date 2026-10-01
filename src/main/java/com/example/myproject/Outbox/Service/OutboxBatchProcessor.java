@@ -34,7 +34,6 @@ public class OutboxBatchProcessor {
 
     @Scheduled(fixedDelayString = "${app.outbox.poll-delay-ms:500}")
     public void processBatch() {
-        // Каждое событие получает полный срок аренды перед своей обработкой.
         for (int i = 0; i < BATCH_SIZE; i++) {
             List<ProcessingOutboxEvent> claimed = leaseService.claimBatch(1);
             if (claimed.isEmpty()) {
@@ -53,11 +52,16 @@ public class OutboxBatchProcessor {
     private void processEvent(ProcessingOutboxEvent event) throws IOException {
         switch (event.eventType()) {
             case LETTER_CACHE_EVICT -> {
-                redisRepository.evictLetter(
+                boolean evicted = Boolean.TRUE.equals(redisRepository.evictLetter(
                     event.aggregateId(),
                     event.aggregateEmail(),
                     event.aggregateVersion()
-                );
+                ));
+                if (!evicted) {
+                    throw new IllegalStateException(
+                        "Letter cache eviction was not applied"
+                    );
+                }
                 leaseService.ack(event);
             }
             case IMAGE_PROMOTE -> {

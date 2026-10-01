@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.example.myproject.DTO.FontData;
+import com.example.myproject.DTO.ValidationLimits;
 import com.example.myproject.Images.Model.Image;
 
 import jakarta.persistence.AttributeOverride;
@@ -39,22 +40,22 @@ public class Letter {
 
     @Column(name = "author_email", nullable = false, length = 320)
     private String authorEmail;
-    
+
     @Column(unique = true, nullable = false, updatable = false, length = 64)
     private String publicToken;
 
     @Column(unique = true, nullable = false, updatable = false, length = 128)
     private String securityKey;
 
-    
+
     @Version
     @Column(nullable = false)
     private long version;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = ValidationLimits.LETTER_TITLE_MAX_LENGTH)
     private String title;
 
-    @Column(nullable = false, length = 10_000)
+    @Column(nullable = false, length = ValidationLimits.LETTER_TEXT_MAX_LENGTH)
     private String text;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -63,17 +64,13 @@ public class Letter {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private MyAppUser user;
-    
+
     @Column(nullable = false)
     private Instant expiresAt;
 
-    @Column(name="burn_after_opening", nullable = false)
-    private boolean burnAfterOpening;
-
-
     @OneToMany(
         mappedBy =  "letter",
-        cascade = CascadeType.ALL, 
+        cascade = CascadeType.ALL,
         orphanRemoval = true
     )
     @OrderBy("position ASC")
@@ -91,7 +88,7 @@ public class Letter {
         @AttributeOverride(name = "fontName", column = @Column(name = "font_name", length = 100))
     })
     private FontData font;
-    
+
     @Column(name= "reaction_code")
     private List<String> reactions;
 

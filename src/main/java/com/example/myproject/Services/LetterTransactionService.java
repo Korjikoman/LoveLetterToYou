@@ -1,5 +1,6 @@
 package com.example.myproject.Services;
 
+import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -11,9 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.example.myproject.DTO.CreateLetterResponse;
 import com.example.myproject.DTO.DeleteResult;
@@ -21,12 +27,14 @@ import com.example.myproject.DTO.EditResult;
 import com.example.myproject.DTO.GenPair;
 import com.example.myproject.DTO.LetterData;
 import com.example.myproject.DTO.UpdateLetterData;
+import com.example.myproject.DTO.ValidationLimits;
 import com.example.myproject.Images.DTO.ImagePurpose;
 import com.example.myproject.Images.Model.Image;
 import com.example.myproject.Images.Service.ImageTransactionService;
 import com.example.myproject.Model.Letter;
 import com.example.myproject.Model.LetterImage;
 import com.example.myproject.Model.MyAppUser;
+import com.example.myproject.Outbox.Events.LetterCacheInvalidationEvent;
 import com.example.myproject.Outbox.Model.OutboxEvent;
 import com.example.myproject.Outbox.Repository.OutboxEventRepository;
 import com.example.myproject.Repositories.LetterRepository;
@@ -36,39 +44,41 @@ import com.example.myproject.Utils.PublicToken;
 @Service
 public class LetterTransactionService {
     private static final int MAX_IMAGES = 10;
+    private static final int TOKEN_SAVE_MAX_ATTEMPTS = 5;
+    private static final String UNIQUE_VIOLATION_SQL_STATE = "23505";
 
     private final Clock clock;
     private final LetterRepository letterRepository;
     private final MyAppUserRepository userRepository;
     private final ImageTransactionService imageTransactions;
     private final OutboxEventRepository outboxRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final TransactionTemplate createLetterTransaction;
 
     public LetterTransactionService(
         Clock clock,
         LetterRepository letterRepository,
         MyAppUserRepository userRepository,
         ImageTransactionService imageTransactions,
-        OutboxEventRepository outboxRepository
+        OutboxEventRepository outboxRepository,
+        ApplicationEventPublisher eventPublisher,
+        PlatformTransactionManager transactionManager
     ) {
         this.clock = clock;
         this.letterRepository = letterRepository;
         this.userRepository = userRepository;
         this.imageTransactions = imageTransactions;
         this.outboxRepository = outboxRepository;
+        this.eventPublisher = eventPublisher;
+        this.createLetterTransaction = new TransactionTemplate(
+            transactionManager
+        );
+        this.createLetterTransaction.setPropagationBehavior(
+            TransactionDefinition.PROPAGATION_REQUIRES_NEW
+        );
     }
 
-    private GenPair generateUniquePair() {
-    for (int i = 0; i < 10; i++) {
-        GenPair pair = PublicToken.generatePair();
-        if (!letterRepository.existsByPublicToken(pair.publicToken())) {
-            return pair;
-        }
-    }
-    throw new IllegalStateException("Unable to generate unique token");
-}
 
-    /** Создаёт письмо и привязывает заранее загруженные изображения одной транзакцией. */
-    @Transactional
     public CreateLetterResponse createLetter(String email, LetterData data) {
         if (email == null || email.isBlank() || !valid(data)) {
             return createError("Invalid data");
@@ -77,6 +87,31 @@ public class LetterTransactionService {
             return createError("Invalid image list");
         }
 
+        DataIntegrityViolationException lastCollision = null;
+        for (int attempt = 0; attempt < TOKEN_SAVE_MAX_ATTEMPTS; attempt++) {
+            try {
+                return createLetterTransaction.execute(
+                    status -> createLetterAttempt(email, data)
+                );
+            } catch (DataIntegrityViolationException exception) {
+                if (!causedByUniqueViolation(exception)) {
+                    throw exception;
+                }
+                lastCollision = exception;
+            }
+        }
+
+        throw new IllegalStateException(
+            "Unable to generate unique letter token",
+            lastCollision
+        );
+    }
+
+
+    private CreateLetterResponse createLetterAttempt(
+        String email,
+        LetterData data
+    ) {
         MyAppUser user = userRepository.findByEmail(email)
             .orElse(null);
         if (user == null) {
@@ -89,7 +124,7 @@ public class LetterTransactionService {
 
         Letter letter = new Letter();
 
-        GenPair pair = generateUniquePair();
+        GenPair pair = PublicToken.generatePair();
         letter.setPublicToken(pair.publicToken());
         letter.setSecurityKey(pair.securityKey());
         letter.setAuthorEmail(user.getEmail());
@@ -99,7 +134,6 @@ public class LetterTransactionService {
         Instant now = clock.instant();
         letter.setCreatedAt(now);
         letter.setExpiresAt(now.plus(data.ttl(), ChronoUnit.MINUTES));
-        letter.setBurnAfterOpening(data.burn_after_opening());
         letter.setFont(data.font());
         letter.setReactions(new ArrayList<>(data.reactions()));
 
@@ -121,7 +155,21 @@ public class LetterTransactionService {
         );
     }
 
-    /** Меняет письмо, порядок картинок и очередь удаления одной транзакцией. */
+    private boolean causedByUniqueViolation(Throwable exception) {
+        Throwable current = exception;
+        while (current != null) {
+            if (current instanceof SQLException sqlException
+                && UNIQUE_VIOLATION_SQL_STATE.equals(
+                    sqlException.getSQLState()
+                )) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+
     @Transactional
     public EditResult updateLetter(
         String publicToken,
@@ -190,18 +238,15 @@ public class LetterTransactionService {
         letter.setTitle(data.letterTitle().trim());
         letter.setText(data.letterText());
         letter.setExpiresAt(clock.instant().plus(data.ttl(), ChronoUnit.MINUTES));
-        letter.setBurnAfterOpening(data.burn_after_opening());
         letter.setFont(data.font());
         letter.setReactions(new ArrayList<>(data.reactions()));
 
         letterRepository.saveAndFlush(letter);
-        outboxRepository.save(OutboxEvent.evictLetter(
-            publicToken, email, letter.getVersion(), clock.instant()
-        ));
+        queueCacheEviction(publicToken, email, letter.getVersion());
         return EditResult.UPDATED;
     }
 
-    /** Удаляет письмо в БД, а физические файлы передаёт фоновой очереди. */
+
     @Transactional
     public DeleteResult deleteLetter(String publicToken, String email) {
         if (publicToken == null || publicToken.isBlank()
@@ -222,22 +267,6 @@ public class LetterTransactionService {
         return DeleteResult.DELETED;
     }
 
-    /** Удаляет самоисчезающее письмо только в ожидаемой версии. */
-    @Transactional
-    public boolean burnLetter(String publicToken, String email, long version) {
-        Letter letter = letterRepository.findByPublicTokenForUpdate(publicToken)
-            .orElse(null);
-        if (letter == null
-            || letter.getVersion() != version
-            || !letter.isBurnAfterOpening()
-            || !letter.getUser().getEmail().equalsIgnoreCase(email)) {
-            return false;
-        }
-
-        deleteLetterAndQueueFiles(letter, email);
-        return true;
-    }
-
     private void deleteLetterAndQueueFiles(Letter letter, String email) {
         for (LetterImage link : new ArrayList<>(letter.getImageLinks())) {
             UUID imageId = link.getImage().getId();
@@ -248,8 +277,16 @@ public class LetterTransactionService {
         long tombstoneVersion = Math.addExact(letter.getVersion(), 1L);
         String token = letter.getPublicToken();
         letterRepository.delete(letter);
+        queueCacheEviction(token, email, tombstoneVersion);
+    }
+
+    private void queueCacheEviction(String token, String email, long version) {
+        Instant now = clock.instant();
         outboxRepository.save(OutboxEvent.evictLetter(
-            token, email, tombstoneVersion, clock.instant()
+            token, email, version, now
+        ));
+        eventPublisher.publishEvent(new LetterCacheInvalidationEvent(
+            token, email, version
         ));
     }
 
@@ -281,14 +318,22 @@ public class LetterTransactionService {
     private boolean valid(LetterData data) {
         return data != null
             && data.letterTitle() != null && !data.letterTitle().isBlank()
+            && data.letterTitle().length()
+                <= ValidationLimits.LETTER_TITLE_MAX_LENGTH
             && data.letterText() != null && !data.letterText().isBlank()
+            && data.letterText().length()
+                <= ValidationLimits.LETTER_TEXT_MAX_LENGTH
             && data.ttl() != null && data.ttl() >= 5 && data.ttl() <= 1440;
     }
 
     private boolean valid(UpdateLetterData data) {
         return data != null
             && data.letterTitle() != null && !data.letterTitle().isBlank()
+            && data.letterTitle().length()
+                <= ValidationLimits.LETTER_TITLE_MAX_LENGTH
             && data.letterText() != null && !data.letterText().isBlank()
+            && data.letterText().length()
+                <= ValidationLimits.LETTER_TEXT_MAX_LENGTH
             && data.ttl() != null && data.ttl() >= 5 && data.ttl() <= 1440;
     }
 
@@ -296,13 +341,4 @@ public class LetterTransactionService {
         return new CreateLetterResponse(null, null, List.of(), error);
     }
 
-    // private String generateUniqueToken() {
-    //     for (int attempt = 0; attempt < 5; attempt++) {
-    //         String token = PublicToken.generatePublicToken();
-    //         if (!letterRepository.existsByPublicToken(token)) {
-    //             return token;
-    //         }
-    //     }
-    //     throw new IllegalStateException("Cannot generate a unique letter token");
-    // }
 }

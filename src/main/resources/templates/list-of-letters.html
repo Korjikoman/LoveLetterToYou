@@ -75,11 +75,10 @@
                 const card = button.closest('.letter-card');
                 const publicToken = card.dataset.publicToken;
 
-                // Редирект на страницу редактирования
                 window.location.href = '/letters/edit?publicToken=' + encodeURIComponent(publicToken);
             });
         });
-        
+
         deleteButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const card = button.closest('.letter-card');
@@ -98,7 +97,7 @@
                 .catch(() => showTempMessage('Network error', 'danger'));
             })
         })
-        
+
         function showTempMessage(text, type) {
             let c = document.getElementById('messageContainer');
             if (!c) {

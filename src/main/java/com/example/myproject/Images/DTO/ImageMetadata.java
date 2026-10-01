@@ -10,5 +10,5 @@ public record ImageMetadata(
     String mainRelPath,
     Instant uploadExpiresAt
 ) {
-    
+
 }

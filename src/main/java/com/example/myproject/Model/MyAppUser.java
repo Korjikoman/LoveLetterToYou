@@ -22,7 +22,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "my_app_user")
 public class MyAppUser {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
     @SequenceGenerator(name = "user_seq", sequenceName = "my_app_user_seq", allocationSize = 50)
@@ -50,5 +50,5 @@ public class MyAppUser {
     public boolean hasAvatar() {
         return avatarImage != null;
     }
-    
+
 }

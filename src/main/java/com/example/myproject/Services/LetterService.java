@@ -57,7 +57,7 @@ public class LetterService {
         this.transactions = transactions;
     }
 
-    /** БД задаёт страницу и порядок, Redis ускоряет получение её содержимого. */
+
     public LetterPage getLetters(String email, Long beforeId, int pageSize) {
         requireEmail(email);
         int limit = Math.max(1, Math.min(pageSize, 100));
@@ -150,10 +150,17 @@ public class LetterService {
         requireToken(publicToken);
         Instant now = clock.instant();
 
+        Optional<ActiveLetterRef> activeRef = letterRepository
+            .findActiveLetterRefForAuthor(publicToken, email, now);
+        if (activeRef.isEmpty()) {
+            return Optional.empty();
+        }
+
         Optional<CachedLetter> cached = readCache(publicToken);
         if (cached.isPresent()) {
             CachedLetter letter = cached.get();
-            if (letter.expiresAt() != null
+            if (Objects.equals(letter.version(), activeRef.get().getVersion())
+                && letter.expiresAt() != null
                 && letter.expiresAt().isAfter(now)
                 && email.equalsIgnoreCase(letter.authorEmail())) {
                 return Optional.of(letterMapper.toView(letter));
@@ -177,19 +184,20 @@ public class LetterService {
         }
         Instant now = clock.instant();
 
+        Optional<ActiveLetterRef> activeRef = letterRepository
+            .findActiveLetterRefForAnonymous(publicToken, securityKey, now);
+        if (activeRef.isEmpty()) {
+            return Optional.empty();
+        }
+
         Optional<CachedLetter> cached = readCache(publicToken);
         if (cached.isPresent()) {
             CachedLetter letter = cached.get();
-            if (letter.expiresAt() != null
+            if (Objects.equals(letter.version(), activeRef.get().getVersion())
+                && letter.expiresAt() != null
                 && letter.expiresAt().isAfter(now)
                 && securityKey.equals(letter.securityKey())) {
-                if (!letter.burnAfterOpening()
-                    || transactions.burnLetter(
-                        publicToken, letter.authorEmail(), letter.version()
-                    )) {
-                    return Optional.of(letterMapper.toView(letter));
-                }
-                return Optional.empty();
+                return Optional.of(letterMapper.toView(letter));
             }
         }
 
@@ -201,15 +209,7 @@ public class LetterService {
             return Optional.empty();
         }
 
-        Letter letter = found.get();
-        LetterView view = cacheAndMap(letter, now);
-        if (letter.isBurnAfterOpening()
-            && !transactions.burnLetter(
-                publicToken, letter.getAuthorEmail(), letter.getVersion()
-            )) {
-            return Optional.empty();
-        }
-        return Optional.of(view);
+        return found.map(letter -> cacheAndMap(letter, now));
     }
 
     public CreateLetterResponse createLetter(String email, LetterData data) {

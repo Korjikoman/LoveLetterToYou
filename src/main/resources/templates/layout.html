@@ -88,25 +88,52 @@
 
 <th:block th:replace="${scripts}"> </th:block>
 <script>
-    ws = new WebSocket("ws://"+ location.host+"/ws");
-        ws.onopen = () => {
-            console.log("WebSocket Connected Successfully");
-        }
-        ws.onmessage = (event) => {
-            console.log("Message from server: ", event.data);
-            var obj = JSON.parse(event.data);
+(() => {
+    let heartbeatTimer;
+    let reconnectTimer;
 
-            document.getElementById("usersOnlineCounter").innerText = obj.usersOnline;
-            document.getElementById("usersWritingLetterCounter").innerText = obj.usersWritingLetter;
-            document.getElementById("usernameP").innerText = 'Hello, ' + obj.username;
-        }
+    function connect() {
+        const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        const ws = new WebSocket(`${protocol}//${location.host}/ws`);
+
+        window.appSocket = ws;
+
+        ws.onopen = () => {
+            ws.send("heartbeat");
+
+            heartbeatTimer = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send("heartbeat");
+                }
+            }, 20000);
+
+            window.dispatchEvent(new Event("presence-connected"));
+        };
+
+        ws.onmessage = event => {
+            const state = JSON.parse(event.data);
+
+            document.getElementById("usersOnlineCounter").textContent =
+                state.usersOnline;
+
+            document.getElementById("usersWritingLetterCounter").textContent =
+                state.usersWritingLetter;
+        };
 
         ws.onclose = () => {
-            console.log("WebSocket Disconnected")
+            clearInterval(heartbeatTimer);
+            reconnectTimer = setTimeout(connect, 2000);
+        };
+    }
+
+    window.sendPresence = type => {
+        if (window.appSocket?.readyState === WebSocket.OPEN) {
+            window.appSocket.send(type);
         }
-    setInterval(() => {
-        csrfFetch("/api/user/user-is-online", {method: "POST"});
-    }, 59000);
+    };
+
+    connect();
+})();
 </script>
 </body>
 </html>

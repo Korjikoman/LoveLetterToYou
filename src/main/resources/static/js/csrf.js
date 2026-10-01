@@ -7,7 +7,6 @@
         const requestUrl = input instanceof Request ? input.url : input;
         const targetUrl = new URL(requestUrl, window.location.href);
 
-        // если метод безопасный или он ведет не на наш домен, то просто fetch'им
         if (safeMethods.has(method) || targetUrl.origin !== window.location.origin) {
             return fetch(input, init);
         }
@@ -18,7 +17,6 @@
         if (!token || !headerName) {
             return Promise.reject(new Error("CSRF token is not available on this page"));
         }
-        // переносим токен в заголовок запроса
         const requestHeaders = input instanceof Request ? input.headers : undefined;
         const headers = new Headers(init.headers || requestHeaders);
         headers.set(headerName, token);
