@@ -20,8 +20,6 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class RequestRateLimitFilter extends OncePerRequestFilter {
     private static final String POST_METHOD = "POST";
-    private static final String LOGIN_PATH = "/req/login";
-    private static final String REGISTRATION_PATH = "/req/signup";
     private static final String IMAGE_UPLOAD_PATH = "/api/images";
     private static final String JSON_CONTENT_TYPE = "application/json";
     private static final String TOO_MANY_REQUESTS_BODY =
@@ -31,30 +29,16 @@ public class RequestRateLimitFilter extends OncePerRequestFilter {
     private final ConcurrentMap<ClientAction, Window> windows =
         new ConcurrentHashMap<>();
     private final AtomicLong nextCleanupNanos = new AtomicLong();
-    private final Limit loginLimit;
-    private final Limit registrationLimit;
     private final Limit uploadLimit;
     private final long idleEntryTtlNanos;
     private final long cleanupIntervalNanos;
 
     public RequestRateLimitFilter(
-        @Value("${app.rate-limit.login.max-attempts}") int loginMaxAttempts,
-        @Value("${app.rate-limit.login.window}") Duration loginWindow,
-        @Value("${app.rate-limit.registration.max-attempts}")
-        int registrationMaxAttempts,
-        @Value("${app.rate-limit.registration.window}")
-        Duration registrationWindow,
         @Value("${app.rate-limit.upload.max-attempts}") int uploadMaxAttempts,
         @Value("${app.rate-limit.upload.window}") Duration uploadWindow,
         @Value("${app.rate-limit.idle-entry-ttl}") Duration idleEntryTtl,
         @Value("${app.rate-limit.cleanup-interval}") Duration cleanupInterval
     ) {
-        loginLimit = new Limit(Action.LOGIN, loginMaxAttempts, loginWindow);
-        registrationLimit = new Limit(
-            Action.REGISTRATION,
-            registrationMaxAttempts,
-            registrationWindow
-        );
         uploadLimit = new Limit(Action.UPLOAD, uploadMaxAttempts, uploadWindow);
         idleEntryTtlNanos = idleEntryTtl.toNanos();
         cleanupIntervalNanos = cleanupInterval.toNanos();
@@ -98,8 +82,6 @@ public class RequestRateLimitFilter extends OncePerRequestFilter {
         }
 
         return switch (request.getRequestURI()) {
-            case LOGIN_PATH -> loginLimit;
-            case REGISTRATION_PATH -> registrationLimit;
             case IMAGE_UPLOAD_PATH -> uploadLimit;
             default -> null;
         };
@@ -126,8 +108,6 @@ public class RequestRateLimitFilter extends OncePerRequestFilter {
     }
 
     private enum Action {
-        LOGIN,
-        REGISTRATION,
         UPLOAD
     }
 

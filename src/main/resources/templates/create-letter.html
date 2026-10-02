@@ -161,7 +161,11 @@
                     `/watch/letter/${encodeURIComponent(data.publicToken)}`,
                     window.location.origin
                 );
-                await showSuccessModal(letterUrl.toString(), data.securityKey);
+                await showSuccessModal(
+                        letterUrl.toString(),
+                        data.securityKey,
+                        data.publicToken
+                    );
             } catch (error) {
                 alert(error.message || 'Ошибка соединения');
             } finally {
@@ -169,10 +173,15 @@
             }
         });
 
-        async function showSuccessModal(letterUrl, securityKey) {
+        async function showSuccessModal(letterUrl, securityKey, publicToken) {
             const response = await csrfFetch('/create/letter/geturl');
-            if (!response.ok) throw new Error('Не удалось открыть данные письма');
+            if (!response.ok) {
+                throw new Error('Не удалось открыть данные письма');
+            }
             document.body.insertAdjacentHTML('beforeend', await response.text());
+            const dialog = document.querySelector('.modal-overlay');
+            dialog.dataset.editUrl =
+                `/letters/edit?publicToken=${encodeURIComponent(publicToken)}`;
             document.getElementById('letterUrl').value = letterUrl;
             document.getElementById('letterSecurityKey').value = securityKey;
         }
@@ -193,11 +202,18 @@
                 const dialog = document.querySelector('.modal-overlay');
                 if (!dialog) return;
 
+                const editUrl = dialog.dataset.editUrl;
+
                 dialog.remove();
                 document.body.classList.remove('modal-open');
+
+                if (editUrl) {
+                    window.location.href = editUrl;
+                    return;
+                }
+
                 returnFocusTarget?.focus();
             }
-
             function prepareShareDialog(dialog) {
                 if (dialog.dataset.keyboardReady === 'true') return;
 

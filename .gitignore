@@ -31,6 +31,8 @@ build/
 /vscode/settings.json
 ../.vscode/launch.json
 
+data/
+
 *.p12
 *.keystore
 *.jks

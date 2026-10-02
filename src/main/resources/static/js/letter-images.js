@@ -130,6 +130,14 @@
             input.value = '';
             if (files.length === 0) return;
 
+            const maxFileSize = 10 * 1024 * 1024;
+
+            if (files.some(file => file.size > maxFileSize)) {
+                lastError = null;
+                setStatus('Каждое изображение должно быть не больше 10 МБ', true);
+                return;
+            }
+
             if (countImages() + files.length > maxImages) {
                 setStatus(`Можно прикрепить не больше ${maxImages} изображений`, true);
                 return;
@@ -171,8 +179,11 @@
                 while (uploads.size > 0) {
                     await Promise.allSettled(Array.from(uploads));
                 }
-                if (lastError) {
-                    throw lastError;
+                const error = lastError;
+                lastError = null;
+
+                if (error) {
+                    throw error;
                 }
             },
 

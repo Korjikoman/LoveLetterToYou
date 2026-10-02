@@ -119,6 +119,7 @@ public class LetterController {
         model.addAttribute("fontName", font == null ? "" : font.fontName());
         model.addAttribute("letterexpiresAt", letter.expiresAt());
         model.addAttribute("letterPublicToken", letter.publicToken());
+        //model.addAttribute("letterSecureKey", letter.)
 
         return "edit-letter-from-list-of-letters";
     }

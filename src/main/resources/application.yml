@@ -67,12 +67,6 @@ app:
   rate-limit:
     idle-entry-ttl: PT15M
     cleanup-interval: PT5M
-    login:
-      max-attempts: 5
-      window: PT1M
-    registration:
-      max-attempts: 3
-      window: PT10M
     upload:
       max-attempts: 20
       window: PT1M
@@ -91,5 +85,3 @@ management:
           include: livenessState
         readiness:
           include: readinessState,db,redis,diskSpace
-
-

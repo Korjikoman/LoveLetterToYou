@@ -125,6 +125,13 @@ body {
     background-size: 30px 30px;
 }
 
+.error-403 .error-illustration {
+    background:
+        radial-gradient(circle, rgba(255,255,255,.55) 0 3px, transparent 4px),
+        var(--mint);
+    background-size: 30px 30px;
+}
+
 .lost-envelope {
     width: 145px;
     height: 102px;
@@ -195,6 +202,12 @@ body {
     transform: rotate(6deg);
 }
 
+.error-403 .lost-envelope {
+    --error-face: '•︿•';
+    filter: saturate(.8);
+    transform: rotate(-3deg);
+}
+
 .question-mark,
 .tiny-cloud {
     position: absolute;
@@ -236,6 +249,15 @@ body {
 .error-500 .error-code {
     color: #8066bb;
     text-shadow: 5px 5px 0 #ded5fa;
+}
+
+.error-403 .error-code {
+    color: #4f9275;
+    text-shadow: 5px 5px 0 #d9f2e5;
+}
+
+.error-403 .error-kicker {
+    color: #39755e;
 }
 
 .error-kicker {
