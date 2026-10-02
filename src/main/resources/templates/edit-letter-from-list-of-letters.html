@@ -35,6 +35,47 @@
                    th:each="reaction : ${reactions}"
                    th:value="${reaction}">
             <div class="letter-form">
+                <section class="share-details" aria-labelledby="share-details-title">
+                    <div class="share-details-heading">
+                        <span aria-hidden="true">🔗</span>
+                        <div>
+                            <h2 id="share-details-title">Share details</h2>
+                            <p>The link and security token cannot be changed.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="letterShareUrl">Letter URL</label>
+                        <div class="share-detail-row">
+                            <input id="letterShareUrl"
+                                   class="share-detail-input"
+                                   type="url"
+                                   readonly>
+                            <button class="copy-detail-button"
+                                    type="button"
+                                    data-copy-target="letterShareUrl">
+                                <span aria-hidden="true">📋</span> Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="letterSecureKey">Security token</label>
+                        <div class="share-detail-row">
+                            <input id="letterSecureKey"
+                                   class="share-detail-input"
+                                   type="text"
+                                   th:value="${letterSecureKey}"
+                                   readonly>
+                            <button class="copy-detail-button"
+                                    type="button"
+                                    data-copy-target="letterSecureKey">
+                                <span aria-hidden="true">📋</span> Copy
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
                 <div class="form-group">
                     <label class="form-label" for="letterTitle">Letter title</label>
                     <input type="text"
@@ -122,6 +163,11 @@
     const letterTitleCount = document.getElementById('letterTitleCount');
     const letterContentCount = document.getElementById('letterContentCount');
     const imageManager = createLetterImageManager();
+
+    document.getElementById('letterShareUrl').value = new URL(
+        `/watch/letter/${encodeURIComponent(document.getElementById('publicToken').value)}`,
+        window.location.origin
+    ).toString();
 
     const updateCharacterCounts = () => {
         letterTitleCount.textContent =

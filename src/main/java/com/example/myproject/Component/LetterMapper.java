@@ -25,6 +25,7 @@ public class LetterMapper {
     public LetterView toView(CachedLetter letter) {
         return new LetterView(
             letter.publicToken(),
+            letter.securityKey(),
             letter.version(),
             letter.authorName(),
             letter.title(),

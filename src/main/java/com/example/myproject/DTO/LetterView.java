@@ -7,7 +7,7 @@ import com.example.myproject.Images.DTO.ImageView;
 
 public record LetterView (
     String publicToken,
-    
+    String secureToken,
     long version,
     String authorName,
     String title,

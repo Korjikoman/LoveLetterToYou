@@ -11,10 +11,9 @@
         <label class="url-label" for="letterUrl">Your shareable letter link</label>
         <div class="url-box">
             <input id="letterUrl" type="text" readonly>
-            <button type="button" class="btn-copy"
-            onclick="const i=document.getElementById('letterUrl');
-                 i.select();
-                 navigator.clipboard.writeText(i.value);">
+            <button type="button"
+                    class="btn-copy"
+                    data-copy-target="letterUrl">
                 <span aria-hidden="true">📋</span> Copy link
             </button>
         </div>
@@ -22,10 +21,9 @@
         <label class="url-label" for="letterSecurityKey">Секретный ключ</label>
         <div class="url-box">
             <input id="letterSecurityKey" type="text" readonly>
-            <button type="button" class="btn-copy"
-                    onclick="const i=document.getElementById('letterSecurityKey');
-                        i.select();
-                        navigator.clipboard.writeText(i.value);">
+            <button type="button"
+                    class="btn-copy"
+                    data-copy-target="letterSecurityKey">
                 <span aria-hidden="true">📋</span> Copy key
             </button>
         </div>
